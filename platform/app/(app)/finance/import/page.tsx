@@ -49,6 +49,10 @@ export default async function ImportPage() {
             <button className="btn btn-primary" id="btn-import" disabled>匯入到平台</button>
             <span className="import-hint" id="import-hint" />
           </div>
+          <div className="card" id="import-summary" style={{ display: "none" }}>
+            <div className="card-title">匯入結果</div>
+            <div id="import-summary-body" />
+          </div>
         </div>
       </div>
       <LegacyImport />

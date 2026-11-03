@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { pickableShows, type Show } from "./shows.ts";
 
 const s = (name: string, date: string | null, o: Partial<Show> = {}): Show => ({
-  id: name, name, type: "other", kind: "performance", performanceDate: date, status: "active", ...o,
+  id: name, name, type: "other", kind: "performance", performanceDate: date, status: "active", defaultExcludedMembers: null, ...o,
 });
 const names = (l: Show[]) => l.map((x) => x.name);
 
