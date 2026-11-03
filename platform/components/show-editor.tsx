@@ -3,8 +3,9 @@
 import { useState, useTransition } from "react";
 import { updateShow } from "@/app/(app)/shows/actions";
 import { IconEdit } from "@/components/icons";
+import { SHOW_SERIES } from "@/lib/shows";
 
-export function ShowInfoButton({ show }: { show: { id: string; name: string; type: string; performanceDate: string | null; status: string } }) {
+export function ShowInfoButton({ show }: { show: { id: string; name: string; type: string; series: string | null; performanceDate: string | null; status: string } }) {
   const [open, setOpen] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -37,7 +38,14 @@ export function ShowInfoButton({ show }: { show: { id: string; name: string; typ
                   <option value="other">其他</option>
                 </select>
               </label>
-              <label className="field"><span>演出日期（月號必填）</span><input className="input" type="date" name="performance_date" defaultValue={show.performanceDate ?? ""} /></label>
+              <label className="field">
+                <span>類別（財務列表的分類與篩選）</span>
+                <select className="select" name="series" defaultValue={show.series ?? ""} required>
+                  <option value="" disabled>選擇類別</option>
+                  {SHOW_SERIES.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </label>
+              <label className="field"><span>演出日期（月號必填；多場次填最晚一場）</span><input className="input" type="date" name="performance_date" defaultValue={show.performanceDate ?? ""} /></label>
               <label className="check-line">
                 <input type="checkbox" name="archived" value="1" defaultChecked={show.status === "archived"} />
                 已演出，歸檔（不再出現在「接下來」與下一場捷徑；財務頁仍看得到）

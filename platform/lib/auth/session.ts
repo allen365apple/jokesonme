@@ -56,6 +56,6 @@ export function sessionCookieOptions(secure: boolean) {
 
 /** 登入後要回去的路徑：只接受站內相對路徑，避免被拿來轉址到外站。 */
 export function safeNextPath(next: string | null | undefined): string {
-  if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return "/todos";
+  if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return "/"; // 根路徑依角色導到各自的首頁
   return next;
 }

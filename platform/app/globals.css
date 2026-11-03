@@ -25,8 +25,7 @@
   --fs-display: 24px; --fs-title: 17px; --fs-body: 15px; --fs-secondary: 13px; --fs-label: var(--fs-secondary); --fs-input: 16px;
   --nav-h: 64px;
   --side-w: 220px;
-  /* 舊名稱相容（應援匯入頁 public/legacy/import.css 用到） */
-  --text-muted: var(--ink-2); --text-secondary: var(--ink-2); --border: var(--line); --border-hover: #CFC7B3;
+  --border-hover: #CFC7B3;
 }
 
 * { box-sizing: border-box; }
@@ -498,3 +497,98 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
   .show-todos .summary-card { display: none; }
 }
 .show-todos-body section > .section:first-child { display: none; } /* 演出頁只有這場一組，不用再顯示群組標題 */
+
+/* ===== 2026-11-03 UI/UX 改版：首頁、財務總覽、演出收支列表、待確認佇列 ===== */
+/* 財務時程：一排小 chips，不是大區塊 */
+.sched-chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 12px; }
+.sched-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 4px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line-2); font-size: var(--fs-secondary); color: var(--ink-2); box-shadow: var(--shadow-sm); max-width: 100%; }
+.sched-chip b { color: var(--ink); font-weight: 700; white-space: nowrap; }
+.sched-chip > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sched-chip em { font-style: normal; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink); font-weight: 500; }
+.sched-chip.soon { background: var(--brand-4); border-color: var(--brand-3); }
+.sched-chip.soon em { color: var(--brand-deep); font-weight: 700; }
+
+/* KPI：五張卡，電腦一排，手機兩欄 */
+.grid-stats.kpi { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 900px) { .grid-stats.kpi { grid-template-columns: repeat(5, minmax(0, 1fr)); } .grid-stats.kpi .amount { font-size: 20px; } }
+.grid-stats .card em { display: block; font-style: normal; font-size: var(--fs-secondary); color: var(--ink-3); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* 兩欄區塊（圖＋組成、類別＋分潤） */
+.two-col { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
+.two-col > section { background: var(--surface); border: 1px solid var(--line-2); border-radius: 20px; padding: 16px; box-shadow: var(--shadow-sm); margin-bottom: 12px; min-width: 0; }
+.two-col > section .section { margin: 0 0 8px; }
+.two-col.tight { gap: 0 12px; }
+@media (min-width: 900px) { .two-col { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; } .two-col > section { margin-bottom: 12px; } }
+@media (min-width: 560px) { .two-col.tight { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* 圖表（伺服器端 SVG） */
+.chart { margin: 0; }
+.chart-svg { width: 100%; height: auto; display: block; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: var(--fs-secondary); color: var(--ink-2); margin-bottom: 6px; }
+.chart-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.chart-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.chart-legend i.line { height: 3px; border-radius: 2px; }
+.chart-table { margin-top: 8px; font-size: var(--fs-secondary); }
+.chart-table summary { cursor: pointer; color: var(--ink-2); padding: 6px 0; }
+.table.mini th, .table.mini td { padding: 6px 8px; font-size: var(--fs-secondary); }
+.table.mini th:first-child, .table.mini td:first-child { padding-left: 8px; }
+.table.flat { background: transparent; }
+.table-wrap.flat { border: 0; box-shadow: none; border-radius: 0; margin-bottom: 0; }
+.stack-bar { position: relative; height: 18px; border-radius: 6px; background: var(--ground); overflow: hidden; margin: 6px 0 10px; }
+.stack-bar i { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+.part-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.part-list li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto 52px; gap: 8px; align-items: center; font-size: var(--fs-body); }
+.part-list i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.part-list b { font-variant-numeric: tabular-nums; }
+.part-list small { text-align: right; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.part-list li.total { border-top: 1px solid var(--line-2); padding-top: 4px; margin-top: 2px; color: var(--ink-2); }
+.fine { font-size: var(--fs-secondary); color: var(--ink-2); line-height: 1.6; margin: 8px 0 10px; }
+.muted { color: var(--ink-3); font-weight: 400; }
+
+/* 成員分潤卡 */
+.member-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+@media (min-width: 900px) { .member-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.member-tile { background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 14px; padding: 10px 12px; min-width: 0; }
+.member-tile header { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 4px; }
+.member-tile header b { font-size: var(--fs-body); }
+.member-tile dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 1px 10px; font-size: var(--fs-secondary); }
+.member-tile dt { color: var(--ink-2); }
+.member-tile dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; white-space: nowrap; }
+.member-tile .next-date { display: block; margin-top: 4px; font-size: var(--fs-secondary); color: var(--ink-3); }
+
+/* 演出收支列表：類別 badge、篩選 chips */
+.badge.s-main { background: var(--success-bg); color: var(--success); }
+.badge.s-mpr { background: var(--ground-2); color: var(--ink-2); }
+.badge.s-special { background: var(--brand-4); color: var(--brand-deep); }
+.badge.s-badge { background: var(--ground); color: var(--ink-2); }
+.filter-chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; }
+.filter-chips > a, .filter-chips > button { min-height: 34px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: var(--fs-secondary); font-weight: 500; color: var(--ink-2); }
+.filter-chips > .on { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.table.pnl td.name { white-space: normal; min-width: 160px; max-width: 320px; }
+.table.pnl td.name a { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line); }
+.table.pnl th:first-child, .table.pnl td:first-child { position: static; }
+.table.pnl tr.group td { font-size: var(--fs-secondary); color: var(--ink-2); background: var(--surface-2); text-align: left; }
+.table.pnl .total td:first-child { text-align: left; }
+
+/* 演出財務詳細：Oen vs 帳上 */
+.vs-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+@media (min-width: 560px) { .vs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.vs-grid > div { background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-secondary); color: var(--ink-2); }
+.vs-grid > div > b { font-size: var(--fs-title); color: var(--ink); font-variant-numeric: tabular-nums; }
+.vs-grid small { color: var(--ink-3); }
+.notice.bad { background: var(--danger-bg); border-color: var(--danger-bg); color: var(--danger-fin); }
+a.notice { display: block; }
+
+/* 待確認佇列 */
+.inbox-card .section h2 { overflow-wrap: anywhere; }
+.inbox-sum { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-bottom: 8px; }
+.inbox-sum div { background: var(--surface-2); border-radius: 10px; padding: 6px 8px; min-width: 0; }
+.inbox-sum small { display: block; font-size: var(--fs-secondary); color: var(--ink-2); }
+.inbox-sum b { font-size: var(--fs-body); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.inbox-flags { margin-bottom: 8px; }
+.inbox-lines { display: flex; flex-direction: column; margin: 8px 0; max-height: 420px; overflow-y: auto; border: 1px solid var(--line-2); border-radius: 12px; padding: 0 10px; }
+.inbox-line { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--line-2); font-size: var(--fs-body); }
+.inbox-line:last-child { border-bottom: 0; }
+.inbox-line input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--brand); flex: none; }
+.inbox-line .btn { flex: none; }
+.quick-entry .filter-chips button.on { background: var(--brand); border-color: var(--brand); color: #fff; }

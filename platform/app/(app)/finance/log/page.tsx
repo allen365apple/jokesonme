@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requirePage } from "@/lib/auth/current";
 import { listRecentTransactions, type LogRow } from "@/lib/finance/data";
+import { countPendingLines } from "@/lib/finance/oen";
 import { formatMonthDay, formatTaipeiStamp, todayInTaipei } from "@/lib/dates";
 import FinanceHead from "@/components/finance-head";
 
@@ -13,7 +14,7 @@ export default async function LogPage({ searchParams }: PageProps<"/finance/log"
   const me = await requirePage("finance", "/finance/log");
   const n = Math.min(MAX, Math.max(STEP, Number(sp.n) || STEP));
   const showDeleted = sp.deleted === "1";
-  const rows = await listRecentTransactions(`user:${me.id}`, n, showDeleted);
+  const [rows, pending] = await Promise.all([listRecentTransactions(`user:${me.id}`, n, showDeleted), countPendingLines(`user:${me.id}`).catch(() => 0)]);
 
   // 依「加入的那一天」分組；10/3 從舊 Google Sheet 搬入的列沒有加入時間（舊表沒記），另成一組
   const groups: { key: string; label: string; rows: LogRow[] }[] = [];
@@ -37,7 +38,7 @@ export default async function LogPage({ searchParams }: PageProps<"/finance/log"
 
   return (
     <main className="page">
-      <FinanceHead me={me} active="log" title="逐筆紀錄" sub="最近加入的收支，新的在上面。用來對帳：誰、哪天、加了哪一筆。" />
+      <FinanceHead me={me} active="log" title="紀錄" sub="最近加入的收支，新的在上面。用來對帳：誰、哪天、加了哪一筆。" pendingCount={pending} />
       <div className="content">
         <div className="toolbar">
           <span className="toolbar-note">最近 {rows.length} 筆</span>
@@ -58,7 +59,7 @@ export default async function LogPage({ searchParams }: PageProps<"/finance/log"
                     <div className="log-title">{r.notes || r.category}</div>
                     <div className="meta">
                       <span className="tag">{r.category}</span>
-                      <Link href={`/finance/transactions?show=${r.showId}`}>{r.showName}</Link>
+                      <Link href={`/finance/shows/${r.showId}`}>{r.showName}</Link>
                       <span>收支日 {formatMonthDay(r.date)}</span>
                       {r.advancedBy ? <span>{r.advancedBy} 墊</span> : null}
                       {r.paidByFund ? <span>共同基金付</span> : null}
