@@ -10,6 +10,9 @@ export type Show = {
 
 export const SHOW_TYPE_LABEL: Record<ShowType, string> = { monthly: "月號", special: "專場", other: "其他" };
 
+// performance_date rule (2026-11-03, Jesse): a show with several sessions stores the
+// LATEST session date (e.g. 直球 5/23+5/30 → 05-30), because finance timing (settlements,
+// day-after tech fees) follows the last session. Exact start time lives in program_start_time.
 type Row = { id: string; name: string; type: ShowType; kind: ShowKind; performance_date: string | null; status: string; default_excluded_members: string[] | null };
 const COLUMNS = "id, name, type, kind, performance_date, status, default_excluded_members";
 
