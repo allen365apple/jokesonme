@@ -18,3 +18,5 @@ export const IconPlus = svg(<path d="M12 5v14M5 12h14" />);
 export const IconEdit = svg(<><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="M13.5 6.5l4 4" /></>);
 export const IconChevron = svg(<path d="M9 5l7 7-7 7" />);
 export const IconChevronLeft = svg(<path d="M15 5l-7 7 7 7" />);
+export const IconHome = svg(<><path d="M4 11l8-7 8 7" /><path d="M6 10v10h12V10" /><path d="M10 20v-6h4v6" /></>);
+export const IconInbox = svg(<><path d="M4 13l2.5-8h11L20 13v6H4z" /><path d="M4 13h5l1.5 2.5h3L15 13h5" /></>);

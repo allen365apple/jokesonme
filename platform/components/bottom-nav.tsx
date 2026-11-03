@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { IconCalendar, IconMic, IconMoney, IconNote, IconTodo } from "@/components/icons";
+import { IconCalendar, IconHome, IconMic, IconMoney, IconNote } from "@/components/icons";
 
-// 手機底部分頁列、電腦左側欄（spec mobile-first-ui「Icon navigation」）。「靈感」畫面上叫「筆記」，路徑不變。
+// 手機底部分頁列、電腦左側欄（spec mobile-first-ui「Icon navigation」）。
+// 2026-11-03 改版：首頁／演出／財務／行事曆／筆記；待辦退出導覽（/todos 路由保留，從首頁「全部待辦」進）。「靈感」畫面上叫「筆記」，路徑不變。
 const ITEMS = [
-  { href: "/todos", label: "待辦", Icon: IconTodo, areas: ["admin", "member"] },
-  { href: "/ideas", label: "筆記", Icon: IconNote, areas: ["admin", "member"] },
+  { href: "/home", label: "首頁", Icon: IconHome, areas: ["admin", "member"] },
   { href: "/shows", label: "演出", Icon: IconMic, areas: ["admin", "member"] },
-  { href: "/calendar", label: "行事曆", Icon: IconCalendar, areas: ["admin", "member"] },
   { href: "/finance", label: "財務", Icon: IconMoney, areas: ["admin", "member", "finance_partner"] },
+  { href: "/calendar", label: "行事曆", Icon: IconCalendar, areas: ["admin", "member"] },
+  { href: "/ideas", label: "筆記", Icon: IconNote, areas: ["admin", "member"] },
 ];
 
 export default function BottomNav({ role }: { role: string }) {
