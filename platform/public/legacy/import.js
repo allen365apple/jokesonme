@@ -1,8 +1,15 @@
 // ============================================================
 // 看我笑話工作室 — 應援金流匯入（原 js/import.js，2026-10-03 搬進新平台）
-// 配對與分類邏輯一行未改；只改了：
+// 2026-10-03 搬家時只改了：
 //   1. 不再呼叫 checkAuth()/renderNav()（新平台的頁面已處理登入與導覽）
 //   2. 按鈕文字「匯入到 Google Sheets」→「匯入到平台」
+// 2026-11 財務審查後（_review/claude_review.md 1、2、3、8）改了匯入的產出，配對邏輯不變：
+//   3. 一筆 Oen 金流一列（不再每專案加總成一列），每列帶來源鍵 oen:<金流編號>[#拆分列]:<income|fee|refund>，
+//      伺服器用它擋重複匯入（同鍵略過）
+//   4. 日期用該筆的撥款日；還沒撥款就用付款日；不再用匯入當天
+//   5. 「撥款後退款」不再跳過：售票列照匯，另外產生一列負數「退款」；退款金額大於 0 的其他金流也一樣
+//   6. 沒付款（尚未付款／已失效／沒有付款時間）的金流不匯入
+//   7. 參與成員（誰分票房）由伺服器依專案推測，匯入前在明細表顯示、匯入後列在結果裡
 // API.getShows / API.batchImportTransactions 由 /legacy/import-shim.js 改接新平台的 /api/finance/import。
 // ============================================================
 
@@ -387,16 +394,51 @@ function tryRunMatching() {
   runMatching();
 }
 
+// ---- 每筆金流的日期／金額／來源鍵 ----
+
+// Oen 的日期格式像「2026/11/02 15:36」；也接受 2026-11-02
+function toIsoDate(value) {
+  const m = String(value || '').match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);
+  return m ? `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}` : null;
+}
+// 撥款日欄位名稱依報表版本不同（撥款日期／撥款日／撥款時間…），找第一個名字含「撥款」又有日期值的欄位
+function payoutDateOf(r) {
+  for (const k of Object.keys(r)) {
+    if (/撥款/.test(k) && /(日|時間|date)/i.test(k)) {
+      const d = toIsoDate(r[k]);
+      if (d) return d;
+    }
+  }
+  return null;
+}
+const paidDateOf = r => toIsoDate(r['付款時間']) || toIsoDate(r['付款日期']) || toIsoDate(r['付款日']);
+// 收支日期：撥款日 > 付款日；都沒有 → null（匯入前擋下，絕不用今天）
+const txDateOf = r => payoutDateOf(r) || paidDateOf(r);
+const chargeNoOf = r => String(r['金流編號'] || '').trim();
+const oenKeyOf = (r, part) => `oen:${chargeNoOf(r)}${r._lineNo ? `#${r._lineNo}` : ''}:${part}`;
+const refundOf = r => Number(r['退款金額']) || 0;
+// 沒付款的金流（尚未付款／已失效／取消，或沒有付款時間）不匯入
+function isPaid(r) {
+  const status = String(r['金流狀態'] || '');
+  if (/尚未付款|已失效|取消|付款失敗/.test(status)) return false;
+  return !!paidDateOf(r);
+}
+
 function runMatching() {
   const rows = getMergedCashflowRows();
   const membership = [];
   const refunds = [];
   const purchases = [];
+  const unpaid = [];
 
   rows.forEach(r => {
-    if (r['金流狀態'] === '撥款後退款') {
-      refunds.push(r);
-    } else if (r['金流類型'] === '定期定額會費') {
+    if (!isPaid(r)) {
+      unpaid.push(r);
+      return;
+    }
+    // 撥款後退款：售票列照匯（錢已撥），退款另外產生一列負數，所以這裡不再跳過
+    if (refundOf(r) > 0 || r['金流狀態'] === '撥款後退款') refunds.push(r);
+    if (/會費/.test(String(r['金流類型'] || ''))) {
       membership.push(r);
     } else if (r['金流類型'] === '單筆購買') {
       purchases.push(r);
@@ -423,7 +465,9 @@ function runMatching() {
       const cfFee = Number(cfRow['手續費']) || 0;
       const cfNet = Number(cfRow['實際收取金額']) || 0;
 
-      match.forEach(entry => {
+      const cfRefund = refundOf(cfRow);
+
+      match.forEach((entry, idx) => {
         const entryTotal = entry.unitPrice * entry.quantity;
         const ratio = totalPrice > 0 ? entryTotal / totalPrice : 1 / match.length;
         const splitRow = {
@@ -431,7 +475,10 @@ function runMatching() {
           '收取金額': Math.round(cfAmount * ratio),
           '手續費': Math.round(cfFee * ratio),
           '實際收取金額': Math.round(cfNet * ratio),
-          _splitFrom: orderId
+          '退款金額': Math.round(cfRefund * ratio),
+          _splitFrom: orderId,
+          _lineNo: idx + 1,            // 拆分列號：來源鍵 oen:<金流編號>#<列號>
+          _item: entry.ticketFullName,
         };
         const name = entry.groupName;
         if (!byName[name]) byName[name] = { orderType: entry.orderType, rows: [], ticketFullNames: new Set() };
@@ -441,7 +488,7 @@ function runMatching() {
     } else {
       const name = match.groupName;
       if (!byName[name]) byName[name] = { orderType: match.orderType, rows: [], ticketFullNames: new Set() };
-      byName[name].rows.push(cfRow);
+      byName[name].rows.push({ ...cfRow, _item: match.ticketFullName || match.itemName });
       if (match.ticketFullName) byName[name].ticketFullNames.add(match.ticketFullName);
     }
   });
@@ -449,7 +496,7 @@ function runMatching() {
   // Convert ticketFullNames sets to arrays for easier use
   Object.values(byName).forEach(v => { v.ticketFullNames = [...v.ticketFullNames]; });
 
-  matchResults = { membership, byName, unmatched, refunds, eventMapping };
+  matchResults = { membership, byName, unmatched, refunds, unpaid, eventMapping };
   renderMappingSection();
   renderDashboard();
 }
@@ -568,25 +615,36 @@ function renderMappingSection() {
 
 // ---- Dashboard ----
 
+// 專案參與成員（伺服器依專案設定／既有票房列／名稱推測；GET /api/finance/import 回傳）
+function participantsHtml(projectName) {
+  const s = showsList.find(x => x.name === projectName);
+  if (!s || !s.participants) return '';
+  const who = s.participants.length === MEMBERS.length ? '全員' : s.participants.join('、');
+  const flag = s.needsReview ? ' <span style="color:var(--warning)">⚠ 專場尚未設定參與成員，請先到「收支」頁設定</span>' : '';
+  return `${escapeHtml(who)} <span class="status-badge">（${escapeHtml(s.sourceLabel || '')}）</span>${flag}`;
+}
+
 function renderDashboard() {
   if (!matchResults) return;
   const nameProjectMap = getNameProjectMap();
-  const { membership, byName, unmatched, refunds } = matchResults;
+  const { membership, byName, unmatched, refunds, unpaid } = matchResults;
   document.getElementById('dashboard-section').style.display = '';
 
-  const allRows = getMergedCashflowRows().filter(r => r['金流狀態'] !== '撥款後退款');
+  const allRows = getMergedCashflowRows().filter(isPaid);
   const totalRevenue = allRows.reduce((s, r) => s + (Number(r['收取金額']) || 0), 0);
   const totalFees = allRows.reduce((s, r) => s + (Number(r['手續費']) || 0), 0);
   const totalNet = allRows.reduce((s, r) => s + (Number(r['實際收取金額']) || 0), 0);
+  const totalRefund = allRows.reduce((s, r) => s + refundOf(r), 0);
 
   document.getElementById('import-stats').innerHTML = `
     <div class="stat-card"><div class="stat-label">收取金額</div><div class="stat-value positive">$${totalRevenue.toLocaleString()}</div></div>
     <div class="stat-card"><div class="stat-label">平台手續費</div><div class="stat-value negative">-$${totalFees.toLocaleString()}</div></div>
-    <div class="stat-card"><div class="stat-label">實際收取</div><div class="stat-value positive">$${totalNet.toLocaleString()}</div></div>
+    <div class="stat-card"><div class="stat-label">退款</div><div class="stat-value negative">-$${totalRefund.toLocaleString()}</div></div>
+    <div class="stat-card"><div class="stat-label">實際收取</div><div class="stat-value positive">$${(totalNet - totalRefund).toLocaleString()}</div></div>
   `;
 
   let breakdownHtml = `<table class="import-breakdown-table">
-    <thead><tr><th>來源</th><th>筆數</th><th>收取金額</th><th>手續費</th><th>實際收取</th></tr></thead><tbody>`;
+    <thead><tr><th>來源</th><th>筆數</th><th>收取金額</th><th>手續費</th><th>實際收取</th><th>分攤成員</th></tr></thead><tbody>`;
   const groups = [];
 
   if (membership.length > 0) {
@@ -600,7 +658,8 @@ function renderDashboard() {
     if (plan1699.length) detail.push(`1,699元×${plan1699.length}`);
     breakdownHtml += `<tr>
       <td>付費會員（${detail.join('、')}）</td><td>${membership.length}</td>
-      <td class="amount-positive">$${mAmt.toLocaleString()}</td><td class="amount-negative">-$${mFee.toLocaleString()}</td><td>$${mNet.toLocaleString()}</td></tr>`;
+      <td class="amount-positive">$${mAmt.toLocaleString()}</td><td class="amount-negative">-$${mFee.toLocaleString()}</td><td>$${mNet.toLocaleString()}</td>
+      <td>${participantsHtml('看我笑話會員')}</td></tr>`;
     groups.push({ showName: '看我笑話會員', category: '付費會員', amount: mAmt, fee: mFee, notes: `應援匯入：${detail.join('、')}` });
   }
 
@@ -625,7 +684,8 @@ function renderDashboard() {
       const typeStr = pg.ticket.map(t => `${t.name}×${t.rows.length}`).join('、');
       breakdownHtml += `<tr>
         <td>${escapeHtml(projectName)}（票券）</td><td>${allTicketRows.length}</td>
-        <td class="amount-positive">$${eAmt.toLocaleString()}</td><td class="amount-negative">-$${eFee.toLocaleString()}</td><td>$${eNet.toLocaleString()}</td></tr>`;
+        <td class="amount-positive">$${eAmt.toLocaleString()}</td><td class="amount-negative">-$${eFee.toLocaleString()}</td><td>$${eNet.toLocaleString()}</td>
+        <td>${participantsHtml(projectName)}</td></tr>`;
       groups.push({ showName: projectName, category: '演出票房', amount: eAmt, fee: eFee, notes: `應援匯入：${typeStr}` });
     }
     if (pg.merchandise.length > 0) {
@@ -636,18 +696,22 @@ function renderDashboard() {
       const typeStr = pg.merchandise.map(m => `${m.name}×${m.rows.length}`).join('、');
       breakdownHtml += `<tr>
         <td>${escapeHtml(projectName)}（周邊）</td><td>${allMerchRows.length}</td>
-        <td class="amount-positive">$${mAmt.toLocaleString()}</td><td class="amount-negative">-$${mFee.toLocaleString()}</td><td>$${mNet.toLocaleString()}</td></tr>`;
+        <td class="amount-positive">$${mAmt.toLocaleString()}</td><td class="amount-negative">-$${mFee.toLocaleString()}</td><td>$${mNet.toLocaleString()}</td>
+        <td>${participantsHtml(projectName)}</td></tr>`;
       groups.push({ showName: projectName, category: '周邊商品', amount: mAmt, fee: mFee, notes: `應援匯入：${typeStr}` });
     }
   });
 
   if (refunds.length > 0) {
-    const rAmt = refunds.reduce((s, r) => s + (Number(r['退款金額']) || 0), 0);
-    breakdownHtml += `<tr><td>退款（不匯入）</td><td>${refunds.length}</td><td colspan="3" class="amount-negative">-$${rAmt.toLocaleString()}</td></tr>`;
+    const rAmt = refunds.reduce((s, r) => s + refundOf(r), 0);
+    breakdownHtml += `<tr><td>退款（匯入為負數列，沿用該專案的分攤成員）</td><td>${refunds.length}</td><td colspan="4" class="amount-negative">-$${rAmt.toLocaleString()}</td></tr>`;
+  }
+  if (unpaid.length > 0) {
+    breakdownHtml += `<tr><td>未付款／已失效（不匯入）</td><td>${unpaid.length}</td><td colspan="4"></td></tr>`;
   }
 
   breakdownHtml += `<tr class="totals-row"><td>合計</td><td>${allRows.length}</td>
-    <td class="amount-positive">$${totalRevenue.toLocaleString()}</td><td class="amount-negative">-$${totalFees.toLocaleString()}</td><td>$${totalNet.toLocaleString()}</td></tr>`;
+    <td class="amount-positive">$${totalRevenue.toLocaleString()}</td><td class="amount-negative">-$${totalFees.toLocaleString()}</td><td>$${(totalNet - totalRefund).toLocaleString()}</td><td></td></tr>`;
   breakdownHtml += '</tbody></table>';
   document.getElementById('breakdown-list').innerHTML = breakdownHtml;
   window._importGroups = groups;
@@ -713,46 +777,100 @@ function updateImportButton() {
 
 // ---- Batch Import ----
 
+// 一筆金流 → 收入列（＋手續費列、退款列），每列帶來源鍵與該筆的撥款日／付款日。
+// 回傳 { rows, errors }；沒有金流編號或日期的筆數會列在 errors，整批不送。
+function buildChargeTransactions(r, showName, category, item, suffix) {
+  const rows = [];
+  const errors = [];
+  const chargeNo = chargeNoOf(r);
+  const date = txDateOf(r);
+  if (!chargeNo) errors.push(`${showName}：有一筆沒有金流編號（${item || ''}）`);
+  if (!date) errors.push(`${showName}：金流 ${chargeNo || '?'} 沒有撥款日也沒有付款日`);
+  if (errors.length) return { rows, errors };
+  const amount = Number(r['收取金額']) || 0;
+  const fee = Number(r['手續費']) || 0;
+  const refund = refundOf(r);
+  const tag = `${chargeNo}｜${item || '未知'}${suffix || ''}`;
+  if (amount > 0) rows.push({ showName, category, notes: `應援匯入 ${tag}`, amount, date, oenKey: oenKeyOf(r, 'income'), recordedBy: '應援匯入' });
+  if (fee > 0) rows.push({ showName, category: '平台手續', notes: `應援手續費 ${tag}`, amount: -fee, date, oenKey: oenKeyOf(r, 'fee'), recordedBy: '應援匯入' });
+  if (refund > 0) rows.push({ showName, category: '退款', notes: `應援退款 ${tag}`, amount: -refund, date, oenKey: oenKeyOf(r, 'refund'), recordedBy: '應援匯入' });
+  return { rows, errors };
+}
+
+function collectTransactions() {
+  const nameProjectMap = getNameProjectMap();
+  const { membership, byName } = matchResults;
+  const transactions = [];
+  const errors = [];
+  const add = res => { transactions.push(...res.rows); errors.push(...res.errors); };
+
+  membership.forEach(r => add(buildChargeTransactions(r, '看我笑話會員', '付費會員', `會費 ${Number(r['收取金額']) || 0} 元`)));
+
+  Object.entries(byName).forEach(([name, info]) => {
+    const projectName = nameProjectMap[name] || name;
+    if (!projectName) return;
+    const category = info.orderType === 'ticket' ? '演出票房' : '周邊商品';
+    info.rows.forEach(r => add(buildChargeTransactions(r, projectName, category, r._item || name)));
+  });
+
+  getUnmatchedAssignments().forEach(a => {
+    if (!a.showName) return;
+    add(buildChargeTransactions(a.row, a.showName, '演出票房', a.row['品項數量'] || '未知', '（手動指定）'));
+  });
+
+  return { transactions, errors };
+}
+
+function renderImportSummary(data, sent) {
+  const box = document.getElementById('import-summary');
+  const body = document.getElementById('import-summary-body');
+  if (!box || !body) return;
+  const shows = data.shows || [];
+  const flagged = shows.filter(s => s.needsReview);
+  let html = `<p>送出 ${sent} 列：新增 <b>${data.inserted}</b> 列、略過 <b>${data.skipped}</b> 列（來源鍵已存在，重複匯入不會算兩次）。</p>`;
+  if (shows.length) {
+    html += '<table class="import-breakdown-table"><thead><tr><th>專案</th><th>分攤成員</th><th>依據</th></tr></thead><tbody>';
+    shows.forEach(s => {
+      const who = s.participants.length === MEMBERS.length ? '全員' : s.participants.join('、');
+      html += `<tr><td>${escapeHtml(s.name)}</td><td>${escapeHtml(who)}</td><td>${escapeHtml(s.sourceLabel || s.source)}${s.needsReview ? ' <span style="color:var(--warning)">⚠ 需人工確認</span>' : ''}</td></tr>`;
+    });
+    html += '</tbody></table>';
+  }
+  if (flagged.length) {
+    html += `<p style="color:var(--warning)">以下專場沒有參與成員設定，這次先以全員共同匯入：${flagged.map(s => escapeHtml(s.name)).join('、')}。請到「收支」頁選該專案 → 「設定參與成員」→ 勾「同時套用到現有收支」，稅務預留會跟著重算。</p>`;
+  }
+  body.innerHTML = html;
+  box.style.display = '';
+}
+
 async function doImport() {
   const btn = document.getElementById('btn-import');
   btn.disabled = true;
   btn.textContent = '匯入中...';
-  const groups = window._importGroups || [];
-  const today = new Date().toISOString().split('T')[0];
-  const transactions = [];
 
-  groups.forEach(g => {
-    transactions.push({ showName: g.showName, category: g.category, notes: g.notes, amount: g.amount, date: today, recordedBy: '應援匯入' });
-    if (g.fee > 0) {
-      transactions.push({ showName: g.showName, category: '平台手續', notes: '應援手續費', amount: -g.fee, date: today, recordedBy: '應援匯入' });
-    }
-  });
-
-  const assignments = getUnmatchedAssignments();
-  const manualGroups = {};
-  assignments.forEach(a => {
-    if (!a.showName) return;
-    if (!manualGroups[a.showName]) manualGroups[a.showName] = { amount: 0, fee: 0, items: [] };
-    manualGroups[a.showName].amount += Number(a.row['收取金額']) || 0;
-    manualGroups[a.showName].fee += Number(a.row['手續費']) || 0;
-    manualGroups[a.showName].items.push(a.row['品項數量'] || '未知');
-  });
-  Object.entries(manualGroups).forEach(([showName, g]) => {
-    const category = '演出票房';
-    transactions.push({ showName, category, notes: `應援匯入（手動指定）：${g.items.length}筆`, amount: g.amount, date: today, recordedBy: '應援匯入' });
-    if (g.fee > 0) {
-      transactions.push({ showName, category: '平台手續', notes: '應援手續費（手動指定）', amount: -g.fee, date: today, recordedBy: '應援匯入' });
-    }
-  });
+  const { transactions, errors } = collectTransactions();
+  if (errors.length) {
+    alert('有資料不完整，整批沒有匯入：\n' + errors.slice(0, 10).join('\n') + (errors.length > 10 ? `\n…共 ${errors.length} 筆` : ''));
+    btn.disabled = false;
+    btn.textContent = '匯入到平台';
+    return;
+  }
+  if (transactions.length === 0) {
+    alert('沒有可匯入的資料');
+    btn.disabled = false;
+    btn.textContent = '匯入到平台';
+    return;
+  }
 
   try {
     const res = await API.batchImportTransactions(transactions);
     if (res.success) {
-      btn.textContent = `已匯入 ${res.data.count} 筆`;
+      btn.textContent = `已匯入 ${res.data.inserted} 列（略過 ${res.data.skipped} 列）`;
       btn.classList.add('btn-secondary');
       btn.classList.remove('btn-primary');
+      renderImportSummary(res.data, transactions.length);
     } else {
-      alert('匯入失敗：' + (res.error || '未知錯誤'));
+      alert('匯入失敗（整批都沒有寫入）：' + (res.error || '未知錯誤'));
       btn.disabled = false;
       btn.textContent = '匯入到平台';
     }

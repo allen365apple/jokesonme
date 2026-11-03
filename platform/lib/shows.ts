@@ -2,15 +2,19 @@ import { db, type Actor } from "./supabase.ts";
 
 export type ShowType = "monthly" | "special" | "other";
 export type ShowKind = "performance" | "ledger";
-export type Show = { id: string; name: string; type: ShowType; kind: ShowKind; performanceDate: string | null; status: string };
+export type Show = {
+  id: string; name: string; type: ShowType; kind: ShowKind; performanceDate: string | null; status: string;
+  /** 財務：預設不分配的成員；null = 未設定（匯入時依既有票房列／名稱推測）。 */
+  defaultExcludedMembers: string[] | null;
+};
 
 export const SHOW_TYPE_LABEL: Record<ShowType, string> = { monthly: "月號", special: "專場", other: "其他" };
 
-type Row = { id: string; name: string; type: ShowType; kind: ShowKind; performance_date: string | null; status: string };
-const COLUMNS = "id, name, type, kind, performance_date, status";
+type Row = { id: string; name: string; type: ShowType; kind: ShowKind; performance_date: string | null; status: string; default_excluded_members: string[] | null };
+const COLUMNS = "id, name, type, kind, performance_date, status, default_excluded_members";
 
 function toShow(r: Row): Show {
-  return { id: r.id, name: r.name, type: r.type, kind: r.kind, performanceDate: r.performance_date, status: r.status };
+  return { id: r.id, name: r.name, type: r.type, kind: r.kind, performanceDate: r.performance_date, status: r.status, defaultExcludedMembers: r.default_excluded_members ?? null };
 }
 const sortShows = (list: Show[]) =>
   list.sort((a, b) => (b.performanceDate ?? "").localeCompare(a.performanceDate ?? "") || a.name.localeCompare(b.name, "zh-Hant"));

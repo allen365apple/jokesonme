@@ -111,6 +111,7 @@ function TxSheet(props: {
   const categories = kind === "income" ? props.incomeCategories : props.expenseCategories.filter((c) => c !== "稅務預留");
   const showFund = kind === "expense";
   const allocate = !(showFund && fund);
+  const showAdvance = allocate && kind === "expense"; // 收入沒有墊款人（伺服器也會清掉）
 
   return (
     <div className="sheet-backdrop" onClick={props.onClose}>
@@ -151,7 +152,7 @@ function TxSheet(props: {
               由共同基金支付
             </label>
           ) : null}
-          {allocate ? (
+          {showAdvance ? (
             <>
               <label className="field">
                 <span>墊款人（沒有人墊就留空）</span>
@@ -167,6 +168,10 @@ function TxSheet(props: {
                   <input className="input" name="advanced_by_other" required defaultValue={t?.advancedBy && !props.members.includes(t.advancedBy) ? t.advancedBy : ""} />
                 </label>
               ) : null}
+            </>
+          ) : null}
+          {allocate ? (
+            <>
               <fieldset className="field" style={{ border: 0, padding: 0, margin: "0 0 14px" }}>
                 <span>分配給（取消勾選 = 這筆不算他的）</span>
                 <div className="picks">

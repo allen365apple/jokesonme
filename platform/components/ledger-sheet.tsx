@@ -49,8 +49,8 @@ export default function LedgerButtons({ members, today }: { members: readonly st
                 </select>
               </label>
               <label className="field">
-                <span>{open === "settlement" ? "金額（利潤）" : "還款金額"}</span>
-                <input className="input" name="amount" type="number" inputMode="decimal" min="1" step="any" required />
+                <span>{open === "settlement" ? "金額（利潤；沖回錯誤結算可填負數，並寫備註）" : "還款金額"}</span>
+                <input className="input" name="amount" type="number" inputMode="decimal" min={open === "settlement" ? undefined : "1"} step="any" required />
               </label>
               <label className="field"><span>日期</span><input className="input" name="date" type="date" required defaultValue={today} /></label>
               <label className="field"><span>備註（選填）</span><input className="input" name="notes" maxLength={100} placeholder={open === "settlement" ? "例：10 月結算" : "例：10 月還款"} /></label>
