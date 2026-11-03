@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requirePage } from "@/lib/auth/current";
-import { daysBetween, listPerformances, pickableShows, SHOW_TYPE_LABEL, type Show } from "@/lib/shows";
+import { daysBetween, listPerformances, pickableShows, seriesOf, SHOW_SERIES, SHOW_TYPE_LABEL, type Show } from "@/lib/shows";
 import { listTodos } from "@/lib/todos";
 import { formatMonthDay, todayInTaipei } from "@/lib/dates";
 import TopBar from "@/components/top-bar";
@@ -12,6 +12,7 @@ import { createShow } from "./actions";
 const ERRORS: Record<string, string> = {
   name: "請填寫演出名稱",
   date: "月號一定要填演出日期",
+  series: "請選擇類別",
   dup: "已經有同名的演出",
   save: "儲存失敗，請再試一次",
 };
@@ -33,7 +34,7 @@ export default async function ShowsPage({ searchParams }: PageProps<"/shows">) {
       <div className="content">
         {next ? (
           <Link href={`/shows/${next.id}`} className="hero">
-            <div className="hero-top"><span>下一場・{SHOW_TYPE_LABEL[next.type]}</span><IconChevron className="chev" /></div>
+            <div className="hero-top"><span>下一場・{seriesOf(next)}・{SHOW_TYPE_LABEL[next.type]}</span><IconChevron className="chev" /></div>
             <div className="hero-title">{next.name}</div>
             <div className="hero-stats">
               <div><b>{formatMonthDay(next.performanceDate!)}</b><span>演出日</span></div>
@@ -76,7 +77,13 @@ export default async function ShowsPage({ searchParams }: PageProps<"/shows">) {
                   <option value="other">其他</option>
                 </select>
               </label>
-              <label className="field"><span>演出日期（月號必填）</span><input className="input" type="date" name="performance_date" /></label>
+              <label className="field">
+                <span>類別</span>
+                <select className="select" name="series" defaultValue="看我笑話">
+                  {SHOW_SERIES.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </label>
+              <label className="field"><span>演出日期（月號必填；多場次填最晚一場）</span><input className="input" type="date" name="performance_date" /></label>
               <div className="actions">
                 <button className="btn btn-primary" type="submit">新增</button>
                 <Link className="btn btn-ghost" href="/shows">取消</Link>
@@ -97,6 +104,7 @@ function ShowRow({ s, open, notes }: { s: Show; open: number; notes: number }) {
         <span className="show-row-name">{s.name}</span>
         <span className="meta">
           {s.performanceDate ? <span>{formatMonthDay(s.performanceDate)}</span> : null}
+          <span>{seriesOf(s)}</span>
           <span>筆記 {notes}</span>
           <span>待辦 {open}</span>
           {s.status === "archived" ? <span className="tag">已歸檔</span> : null}

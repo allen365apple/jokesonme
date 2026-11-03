@@ -1,8 +1,9 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requirePage } from "@/lib/auth/current";
 import { db } from "@/lib/supabase";
 import { listIdeas } from "@/lib/ideas";
-import { daysBetween, listPerformances, pickableShows, SHOW_TYPE_LABEL, type ShowType, toPickerData } from "@/lib/shows";
+import { daysBetween, listPerformances, pickableShows, seriesOf, SHOW_TYPE_LABEL, type ShowSeries, type ShowType, toPickerData } from "@/lib/shows";
 import { assignableUsers, groupByShow, listTodos, listUsers, nameMap } from "@/lib/todos";
 import { formatMonthDay, todayInTaipei } from "@/lib/dates";
 import { displayName } from "@/lib/auth/users";
@@ -18,7 +19,7 @@ export default async function ShowPlanningPage({ params, searchParams }: PagePro
   const sp = await searchParams;
   const me = await requirePage("planning", `/shows/${id}`);
   const actor = `user:${me.id}` as const;
-  const { data: show } = await db(actor).from("shows").select("id, name, type, kind, performance_date, status").eq("id", id).maybeSingle<{ id: string; name: string; type: ShowType; kind: string; performance_date: string | null; status: string }>();
+  const { data: show } = await db(actor).from("shows").select("id, name, type, kind, series, performance_date, status").eq("id", id).maybeSingle<{ id: string; name: string; type: ShowType; kind: string; series: ShowSeries | null; performance_date: string | null; status: string }>();
   if (!show || show.kind !== "performance") notFound();
   const [ideas, shows, users, todos] = await Promise.all([listIdeas(actor, { showId: id }), listPerformances(actor), listUsers(actor), listTodos(actor)]);
   const today = todayInTaipei();
@@ -39,12 +40,17 @@ export default async function ShowPlanningPage({ params, searchParams }: PagePro
         back={{ href: "/shows", label: "演出" }}
         sub={
           <>
-            <span>{SHOW_TYPE_LABEL[show.type]}・{date ? `${formatMonthDay(date)}演出` : "還沒填演出日期"}</span>
+            <span>{seriesOf(show)}・{SHOW_TYPE_LABEL[show.type]}・{date ? `${formatMonthDay(date)}演出` : "還沒填演出日期"}</span>
             {days !== null && days >= 0 && show.status !== "archived" ? <span className="due soon">{days === 0 ? "就是今天" : `還有 ${days} 天`}</span> : null}
             {show.status === "archived" ? <span>・已歸檔</span> : null}
           </>
         }
-        actions={<ShowInfoButton show={{ id: show.id, name: show.name, type: show.type, performanceDate: show.performance_date, status: show.status }} />}
+        actions={
+          <>
+            <Link className="btn btn-ghost btn-sm" href={`/finance/shows/${show.id}`}>財務</Link>
+            <ShowInfoButton show={{ id: show.id, name: show.name, type: show.type, series: show.series, performanceDate: show.performance_date, status: show.status }} />
+          </>
+        }
       />
       <div className="split">
         <div>

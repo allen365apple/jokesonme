@@ -33,7 +33,7 @@ test("空值、亂碼回 null", async () => {
 
 test("next 只接受站內路徑", () => {
   assert.equal(safeNextPath("/todos?f=mine"), "/todos?f=mine");
-  assert.equal(safeNextPath("https://evil.com"), "/todos");
-  assert.equal(safeNextPath("//evil.com"), "/todos");
-  assert.equal(safeNextPath(null), "/todos");
+  assert.equal(safeNextPath("https://evil.com"), "/");
+  assert.equal(safeNextPath("//evil.com"), "/");
+  assert.equal(safeNextPath(null), "/");
 });

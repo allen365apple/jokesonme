@@ -1,9 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { pickableShows, type Show } from "./shows.ts";
+import { guessSeries, pickableShows, type Show } from "./shows.ts";
 
 const s = (name: string, date: string | null, o: Partial<Show> = {}): Show => ({
-  id: name, name, type: "other", kind: "performance", performanceDate: date, status: "active", defaultExcludedMembers: null, ...o,
+  id: name, name, type: "other", kind: "performance", series: null, performanceDate: date, status: "active", defaultExcludedMembers: null, ...o,
 });
 const names = (l: Show[]) => l.map((x) => x.name);
 
@@ -34,4 +34,11 @@ test("形狀三：只有 ledger → 全空", () => {
 
 test("當天演出仍算 next", () => {
   assert.equal(pickableShows([s("今天", "2026-10-03")], "2026-10-03").next?.name, "今天");
+});
+
+test("類別推測（只給畫面用）：現代問題維修中心、專場、其餘看我笑話", () => {
+  assert.equal(guessSeries({ name: "現代問題維修中心｜11 月號", type: "other" }), "現代問題維修中心");
+  assert.equal(guessSeries({ name: "2026 又兔了喜劇專場", type: "other" }), "專場");
+  assert.equal(guessSeries({ name: "《直球》", type: "special" }), "專場");
+  assert.equal(guessSeries({ name: "看我笑話｜第 2 季 11 月號", type: "monthly" }), "看我笑話");
 });

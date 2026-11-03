@@ -32,6 +32,7 @@ export async function requireAction(area: Area): Promise<UserRow> {
   return user!;
 }
 
+/** 首頁：成員與管理員是 /home（下一場、財務時程、待確認）；財務夥伴只有財務區，直接到財務總覽。 */
 export function homeFor(user: Pick<UserRow, "role">): string {
-  return user.role === "finance_partner" ? "/finance" : "/todos";
+  return user.role === "finance_partner" ? "/finance" : "/home";
 }
