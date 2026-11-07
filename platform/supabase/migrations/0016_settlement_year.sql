@@ -11,7 +11,12 @@ language sql immutable as $$
   select case when extract(month from p_date) = 1 then extract(year from p_date)::int - 1 else extract(year from p_date)::int end
 $$;
 
-update settlements set for_year = finance_default_settlement_year(date) where for_year is null;
+-- 回填會觸發 audit trigger，要先設 actor（跟 0009、0015 一樣）
+do $$
+begin
+  perform set_config('app.actor', 'migration', true);
+  update settlements set for_year = finance_default_settlement_year(date) where for_year is null;
+end $$;
 alter table settlements alter column for_year set not null;
 alter table settlements drop constraint if exists settlements_for_year_check;
 alter table settlements add constraint settlements_for_year_check check (for_year between 2020 and 2100);
