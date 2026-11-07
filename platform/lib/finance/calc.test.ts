@@ -63,6 +63,28 @@ test("共同基金：共同基金支付的支出不算共同支出，只算已�
   const g = commonFund([tx({ amount: 7901 })]);
   assert.equal(g.fundReserved, 1580); // 1580.2 → 1580
   assert.equal(g.distributableCommonNet, 6321);
+  assert.equal(g.fundCarryIn, 0);
+});
+
+test("共同基金餘額跨年累計：該年提撥／動用只算該年，餘額 = 上年結轉 + 提撥 − 動用", () => {
+  const rows = [
+    tx({ amount: 10000, date: "2025-06-01" }), tx({ amount: -500, paidByFund: true, category: "行政雜支", date: "2025-07-01" }), // 2025：提撥 2000、動用 500 → 結轉 1500
+    tx({ amount: 20000, date: "2026-03-01" }), tx({ amount: -13000, paidByFund: true, category: "行政雜支", date: "2026-04-01" }), // 2026：提撥 4000、動用 13000
+    tx({ amount: 5000, date: "2027-01-05" }), // 2027：提撥 1000
+  ];
+  const f25 = commonFund(rows, "2025");
+  assert.deepEqual([f25.fundCarryIn, f25.fundReserved, f25.fundUsed, f25.fundBalance], [0, 2000, 500, 1500]);
+  const f26 = commonFund(rows, "2026");
+  assert.deepEqual([f26.fundCarryIn, f26.fundReserved, f26.fundUsed, f26.fundBalance], [1500, 4000, 13000, -7500]);
+  assert.notEqual(f26.fundBalance, 4000 - 13000); // 反方向：不累計會是 -9000
+  const f27 = commonFund(rows, "2027");
+  assert.deepEqual([f27.fundCarryIn, f27.fundReserved, f27.fundUsed, f27.fundBalance], [-7500, 1000, 0, -6500]);
+  // 不給年份 = 全歷史，餘額等於各年加總
+  const all = commonFund(rows);
+  assert.equal(all.fundBalance, 7000 - 13500);
+  assert.equal(all.fundBalance, f27.fundBalance);
+  // 可分配只看該年（成員年度報表用）
+  assert.equal(f26.distributableCommonNet, 16000);
 });
 
 test("共同基金只抽「排除成員為空」的列：專場票房、專場退款都不進基金", () => {

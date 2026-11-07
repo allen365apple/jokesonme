@@ -58,7 +58,7 @@ export default async function FinanceOverview({ searchParams }: PageProps<"/fina
           <div className="card"><small>成本</small><span className="amount neg">{money(sum.totalExpense)}</span><em>含稅務預留與退款</em></div>
           <div className="card"><small>淨利</small><span className={`amount ${cls(sum.netProfit)}`}>{money(sum.netProfit)}</span></div>
           <div className="card"><small>稅務預留</small><span className="amount">{money(tax.reserved)}</span><em>3% 自動提列，基礎 {money(tax.base)}</em></div>
-          <div className="card"><small>共同基金餘額</small><span className={`amount ${cls(fund.fundBalance)}`}>{money(fund.fundBalance)}</span><em>提撥 {money(fund.fundReserved)} − 動用 {money(fund.fundUsed)}</em></div>
+          <div className="card"><small>共同基金餘額</small><span className={`amount ${cls(fund.fundBalance)}`}>{money(fund.fundBalance)}</span><em>{fund.fundCarryIn !== 0 ? `上年結轉 ${money(fund.fundCarryIn)} + ` : ""}提撥 {money(fund.fundReserved)} − 動用 {money(fund.fundUsed)}（累計至 {year} 年底）</em></div>
         </div>
 
         <div className="two-col">

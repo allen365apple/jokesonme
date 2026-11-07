@@ -171,6 +171,13 @@ The system SHALL display a "看我笑話共同基金" section on the Financial A
 - Fund draws (已動用): absolute value of the sum of all transactions where `paidByFund` is true
 - Fund balance (基金餘額): 累積提撥 − 已動用
 
+When the page is filtered to a year, 共同收入／支出／淨利／提撥／已動用 SHALL cover that calendar year only, but 基金餘額 SHALL carry over across years: balance at the end of year Y = balance at the end of Y−1 + Y's 提撥 − Y's 已動用 (each year's 提撥 rounded separately). The page SHALL show the carry-in from the previous year when it is non-zero. (Jesse 2026-11-07: the fund is one continuing pool.)
+
+#### Scenario: Fund balance carries over to the next year
+
+- **WHEN** 2026 ends with 提撥 4,000 and 已動用 13,000, and 2027 so far has 提撥 1,000 and no draws
+- **THEN** the 2027 view shows 上年結轉 −9,000, 提撥 1,000, 已動用 0, and 基金餘額 −8,000
+
 #### Scenario: View common fund with mixed transactions
 
 - **WHEN** there are transactions with and without excluded members, and no paidByFund expenses

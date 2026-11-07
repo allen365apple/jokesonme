@@ -152,26 +152,38 @@ export function yearSummary(allTxs: Tx[], year?: string): Summary {
 
 export type CommonFund = {
   commonIncome: number; commonExpense: number; commonNetProfit: number;
-  fundReserved: number; fundUsed: number; fundBalance: number; distributableCommonNet: number;
+  fundReserved: number; fundUsed: number; distributableCommonNet: number;
+  /** 上年年底的基金餘額（跨年結轉）；不給 year 時為 0 */
+  fundCarryIn: number;
+  /** 累計到該年年底的基金餘額 = 上年結轉 + 該年提撥 − 該年動用（Jesse 2026-11-07 拍板：基金是一個持續的池子） */
+  fundBalance: number;
 };
 /**
  * 共同基金：只有「排除成員為空」（全員共同）的列才計入共同收支、才提撥 20%。
  * 任何有排除成員的列（專場票房、專場退款…）都不進基金、也不算共同淨利。
  * 提撥金額取整；可分配 = 共同淨利 − 提撥（兩者相加剛好等於共同淨利）。
+ * 給 year 時收支、提撥、動用、可分配只算該年；餘額則逐年結轉（每年各自取整後相加），所以每年畫面上的數字加起來就是餘額。
  */
 export function commonFund(allTxs: Tx[], year?: string): CommonFund {
-  const txs = inYear(allTxs, year);
-  // paidByFund 支出不計入共同支出（避免雙扣），只算進「基金已動用」
-  const commonIncome = txs.filter((t) => t.amount > 0 && isShared(t) && !t.paidByFund).reduce((s, t) => s + t.amount, 0);
-  const commonExpense = txs.filter((t) => t.amount < 0 && isShared(t) && !t.paidByFund).reduce((s, t) => s + t.amount, 0);
-  const commonNetProfit = commonIncome + commonExpense;
-  const fundReserved = Math.round(commonNetProfit * COMMON_FUND_RATE);
-  const fundUsed = txs.filter((t) => t.amount < 0 && t.paidByFund).reduce((s, t) => s + Math.abs(t.amount), 0);
-  return {
-    commonIncome, commonExpense, commonNetProfit, fundReserved, fundUsed,
-    fundBalance: fundReserved - fundUsed,
-    distributableCommonNet: commonNetProfit - fundReserved,
+  const one = (txs: Tx[]) => {
+    // paidByFund 支出不計入共同支出（避免雙扣），只算進「基金已動用」
+    const commonIncome = txs.filter((t) => t.amount > 0 && isShared(t) && !t.paidByFund).reduce((s, t) => s + t.amount, 0);
+    const commonExpense = txs.filter((t) => t.amount < 0 && isShared(t) && !t.paidByFund).reduce((s, t) => s + t.amount, 0);
+    const commonNetProfit = commonIncome + commonExpense;
+    const fundReserved = Math.round(commonNetProfit * COMMON_FUND_RATE);
+    const fundUsed = txs.filter((t) => t.amount < 0 && t.paidByFund).reduce((s, t) => s + Math.abs(t.amount), 0);
+    return { commonIncome, commonExpense, commonNetProfit, fundReserved, fundUsed, distributableCommonNet: commonNetProfit - fundReserved };
   };
+  const cur = one(inYear(allTxs, year));
+  let fundCarryIn = 0;
+  if (year) {
+    const earlier = [...new Set(allTxs.map((t) => yearOf(t.date)).filter((y) => y < year))];
+    for (const y of earlier) {
+      const f = one(inYear(allTxs, y));
+      fundCarryIn += f.fundReserved - f.fundUsed;
+    }
+  }
+  return { ...cur, fundCarryIn, fundBalance: fundCarryIn + cur.fundReserved - cur.fundUsed };
 }
 
 export type ShowPnl = { name: string; income: number; expense: number; net: number };
