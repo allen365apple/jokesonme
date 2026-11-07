@@ -20,12 +20,31 @@ function toTx(r: DbTx): TxRow {
   };
 }
 
+const PAGE = 1000;
+/**
+ * Supabase（PostgREST）一次最多回 1000 列，超過會被默默截斷（2026-11-07：1,213 筆收支只讀到 1000 筆，分潤少算）。
+ * 用 .range 一頁一頁讀，直到某頁不足一頁為止。page(from, to) 每頁都要建新的查詢，
+ * 排序也要能唯一決定順序（最後補 id），不然換頁時同值的列可能重複或漏掉。
+ */
+async function readAllPages<T>(label: string, page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>): Promise<T[]> {
+  const out: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await page(from, from + PAGE - 1);
+    if (error) throw new Error(`${label}: ${error.message}`);
+    const rows = data ?? [];
+    out.push(...rows);
+    if (rows.length < PAGE) return out;
+  }
+}
+
 export async function listTransactions(actor: Actor, showId?: string): Promise<TxRow[]> {
-  let q = db(actor).from("transactions").select(TX_SELECT).is("deleted_at", null).order("sort_order");
-  if (showId) q = q.eq("show_id", showId);
-  const { data, error } = await q.returns<DbTx[]>();
-  if (error) throw new Error(`list transactions: ${error.message}`);
-  return (data ?? []).map(toTx);
+  const client = db(actor);
+  const rows = await readAllPages<DbTx>("list transactions", (from, to) => {
+    let q = client.from("transactions").select(TX_SELECT).is("deleted_at", null).order("sort_order").order("id");
+    if (showId) q = q.eq("show_id", showId);
+    return q.range(from, to).returns<DbTx[]>();
+  });
+  return rows.map(toTx);
 }
 
 export type LogRow = TxRow & { createdAt: string; legacy: boolean; addedBy: string | null; deletedAt: string | null; deletedBy: string | null };
@@ -72,9 +91,12 @@ export async function listRecentTransactions(actor: Actor, limit: number, includ
 }
 
 export async function listLedger(actor: Actor, table: "settlements" | "advance_repayments"): Promise<Ledger[]> {
-  const { data, error } = await db(actor).from(table).select("id, member, amount, date, notes, sort_order").is("deleted_at", null).order("sort_order");
-  if (error) throw new Error(`list ${table}: ${error.message}`);
-  return (data ?? []).map((r: { id: string; member: string; amount: string | number; date: string; notes: string; sort_order: number }) => ({
+  type DbLedger = { id: string; member: string; amount: string | number; date: string; notes: string; sort_order: number };
+  const client = db(actor);
+  const rows = await readAllPages<DbLedger>(`list ${table}`, (from, to) =>
+    client.from(table).select("id, member, amount, date, notes, sort_order").is("deleted_at", null).order("sort_order").order("id").range(from, to).returns<DbLedger[]>(),
+  );
+  return rows.map((r) => ({
     id: r.id, member: r.member, amount: Number(r.amount), date: r.date, notes: r.notes, sortOrder: Number(r.sort_order),
   }));
 }
