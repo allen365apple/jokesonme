@@ -7,7 +7,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAction } from "@/lib/auth/current";
 import { db } from "@/lib/supabase";
-import { INCOME_CATEGORIES, MANUAL_EXPENSE_CATEGORIES, MEMBERS, normalizeExcluded } from "@/lib/finance/calc";
+import { defaultSettlementYear, INCOME_CATEGORIES, MANUAL_EXPENSE_CATEGORIES, MEMBERS, normalizeExcluded } from "@/lib/finance/calc";
 import { importTransactions, listTransactions, saveTransactionRow, setShowParticipants as setShowParticipantsDb, softDeleteTransaction } from "@/lib/finance/data";
 import { approveOenLines, listPendingLines, markOenLinesHistorical, reassignOenLines, skipOenLines, unskipOenLines } from "@/lib/finance/oen";
 import { inferParticipants } from "@/lib/finance/participants";
@@ -118,7 +118,14 @@ async function addLedger(table: "settlements" | "advance_repayments", fd: FormDa
   if (amount < 0 && !notes) throw new Error("負數校正列請填備註說明原因");
   const date = s(fd, "date");
   if (!isDate(date)) throw new Error("日期不正確");
-  const { error } = await db(`user:${me.id}`).from(table).insert({ member, amount, date, notes });
+  const row: Record<string, unknown> = { member, amount, date, notes };
+  if (table === "settlements") {
+    // 分潤年度（0016）：畫面沒送就套預設規則（1 月出款歸前一年）
+    const forYear = s(fd, "for_year") || defaultSettlementYear(date);
+    if (!/^\d{4}$/.test(forYear)) throw new Error("分潤年度不正確");
+    row.for_year = Number(forYear);
+  }
+  const { error } = await db(`user:${me.id}`).from(table).insert(row);
   if (error) throw new Error(error.message);
   revalidateFinance();
 }

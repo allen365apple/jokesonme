@@ -76,6 +76,36 @@ code:
 -->
 
 ---
+### Requirement: Settlement profit year
+
+Each settlement record SHALL carry a profit year (`for_year`): the calendar year whose profit the payout distributes. The member earnings report for a given year SHALL count a settlement as "已付" by its profit year, not by the year of its payout date. The default profit year SHALL be the payout date's year, except that a payout dated in January SHALL default to the previous year (December's share is paid on the 10th of January). The settlement form SHALL show the default and allow the user to change it.
+
+#### Scenario: December share paid in January counts toward the previous year
+
+- **WHEN** a settlement dated 2027-01-10 is added without changing the profit year
+- **THEN** it is stored with profit year 2026 and appears in the 2026 member earnings report as 已付, and not in 2027
+
+#### Scenario: Explicit profit year overrides the default
+
+- **WHEN** the user adds a settlement dated 2027-01-20 and selects profit year 2027
+- **THEN** it is stored with profit year 2027 and counts toward 2027
+
+#### Scenario: Rows inserted without a profit year
+
+- **WHEN** a settlement row is inserted without a profit year (legacy script, migration)
+- **THEN** the database applies the default rule so the column is never null
+
+<!-- @trace
+source: settlement-profit-year (Jesse 2026-11-07 拍板：12 月分潤在隔年 1/10 出款算前一年)
+updated: 2026-11-07
+code:
+  - platform/supabase/migrations/0016_settlement_year.sql
+  - platform/lib/finance/calc.ts
+  - platform/app/(app)/finance/actions.ts
+  - platform/components/ledger-sheet.tsx
+-->
+
+---
 ### Requirement: Get settlement records
 
 The system SHALL provide an API action to retrieve all settlement records from the "成員結算" sheet.

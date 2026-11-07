@@ -91,13 +91,16 @@ export async function listRecentTransactions(actor: Actor, limit: number, includ
 }
 
 export async function listLedger(actor: Actor, table: "settlements" | "advance_repayments"): Promise<Ledger[]> {
-  type DbLedger = { id: string; member: string; amount: string | number; date: string; notes: string; sort_order: number };
+  type DbLedger = { id: string; member: string; amount: string | number; date: string; notes: string; sort_order: number; for_year?: number | null };
   const client = db(actor);
+  // 只有成員結算有分潤年度（0016 settlements.for_year）
+  const columns = table === "settlements" ? "id, member, amount, date, notes, sort_order, for_year" : "id, member, amount, date, notes, sort_order";
   const rows = await readAllPages<DbLedger>(`list ${table}`, (from, to) =>
-    client.from(table).select("id, member, amount, date, notes, sort_order").is("deleted_at", null).order("sort_order").order("id").range(from, to).returns<DbLedger[]>(),
+    client.from(table).select(columns).is("deleted_at", null).order("sort_order").order("id").range(from, to).returns<DbLedger[]>(),
   );
   return rows.map((r) => ({
     id: r.id, member: r.member, amount: Number(r.amount), date: r.date, notes: r.notes, sortOrder: Number(r.sort_order),
+    ...(r.for_year == null ? {} : { forYear: String(r.for_year) }),
   }));
 }
 

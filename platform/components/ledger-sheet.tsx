@@ -2,12 +2,17 @@
 // 財務分析頁的「新增結算」「新增代墊還款」面板。
 import { useState, useTransition } from "react";
 import { addRepayment, addSettlement, type ActionResult } from "@/app/(app)/finance/actions";
+import { defaultSettlementYear } from "@/lib/finance/calc";
 
 export default function LedgerButtons({ members, today }: { members: readonly string[]; today: string }) {
   const [open, setOpen] = useState<"settlement" | "repayment" | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, start] = useTransition();
+  const [date, setDate] = useState(today);
   const title = open === "settlement" ? "新增結算（利潤分配，已收款）" : "新增代墊還款";
+  // 分潤年度：預設照規則（1 月出款歸前一年），可改；選項是出款年與前一年
+  const defaultYear = defaultSettlementYear(date);
+  const yearOptions = [...new Set([String(Number(date.slice(0, 4)) - 1), date.slice(0, 4), defaultYear])].sort();
 
   return (
     <>
@@ -52,7 +57,15 @@ export default function LedgerButtons({ members, today }: { members: readonly st
                 <span>{open === "settlement" ? "金額（利潤；沖回錯誤結算可填負數，並寫備註）" : "還款金額"}</span>
                 <input className="input" name="amount" type="number" inputMode="decimal" min={open === "settlement" ? undefined : "1"} step="any" required />
               </label>
-              <label className="field"><span>日期</span><input className="input" name="date" type="date" required defaultValue={today} /></label>
+              <label className="field"><span>{open === "settlement" ? "出款日期" : "日期"}</span><input className="input" name="date" type="date" required value={date} onChange={(e) => setDate(e.target.value || today)} /></label>
+              {open === "settlement" ? (
+                <label className="field">
+                  <span>分潤年度（12 月分潤在 1 月出款時選前一年）</span>
+                  <select className="select" name="for_year" key={defaultYear} defaultValue={defaultYear}>
+                    {yearOptions.map((y) => <option key={y} value={y}>{y} 年</option>)}
+                  </select>
+                </label>
+              ) : null}
               <label className="field"><span>備註（選填）</span><input className="input" name="notes" maxLength={100} placeholder={open === "settlement" ? "例：10 月結算" : "例：10 月還款"} /></label>
               <div className="actions">
                 <button className="btn btn-primary" type="submit" disabled={pending}>{pending ? "儲存中…" : "新增"}</button>

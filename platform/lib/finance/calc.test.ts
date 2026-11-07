@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  categoryShares, categoryTotals, commonFund, deriveSettleStatus, groupKey, incomeComposition, inYear, memberEarnings, MEMBERS, monthlyTrend,
-  normalizeExcluded, roundPreservingSum, showPnlById, showSplit, taxReservesForShow, taxReserveSummary, yearsOf, yearSummary, type Ledger, type Tx,
+  categoryShares, categoryTotals, commonFund, defaultSettlementYear, deriveSettleStatus, groupKey, incomeComposition, inYear, memberEarnings, MEMBERS, monthlyTrend,
+  normalizeExcluded, roundPreservingSum, settlementYearOf, showPnlById, showSplit, taxReservesForShow, taxReserveSummary, yearsOf, yearSummary, type Ledger, type Tx,
 } from "./calc.ts";
 
 let seq = 0;
@@ -118,7 +118,7 @@ test("年度：總表、基金、成員報表只算該台北日曆年；代墊�
     tx({ amount: -300, advancedBy: "柏文", date: "2026-12-20" }),
     tx({ amount: -200, advancedBy: "柏文", date: "2027-01-05" }),
   ];
-  const settlements = [led("柏文", 100, "2026-12-30"), led("柏文", 50, "2027-01-02")];
+  const settlements = [led("柏文", 100, "2026-12-30"), led("柏文", 50, "2027-02-02")]; // 1 月出款會歸前一年（分潤年度規則），所以用 2 月當 2027 的結算
   const repayments = [led("柏文", 300, "2027-01-03")];
 
   assert.deepEqual(yearSummary(rows, "2026"), { totalIncome: 10000, totalExpense: -300, netProfit: 9700 });
@@ -141,6 +141,32 @@ test("年度：總表、基金、成員報表只算該台北日曆年；代墊�
 
   assert.deepEqual(inYear(rows, "2027").map((t) => t.amount), [5000, -200]);
   assert.deepEqual(yearsOf(rows, "2028"), ["2028", "2027", "2026"]);
+});
+
+test("分潤年度：12 月分潤在隔年 1/10 出款算前一年；有存 forYear 就照它；年份選單看分潤年度", () => {
+  assert.equal(defaultSettlementYear("2027-01-10"), "2026");
+  assert.equal(defaultSettlementYear("2027-01-31"), "2026");
+  assert.equal(defaultSettlementYear("2027-02-01"), "2027");
+  assert.equal(defaultSettlementYear("2026-12-31"), "2026");
+  assert.equal(settlementYearOf({ date: "2027-01-10" }), "2026"); // 舊 Sheet 資料沒 forYear → 套規則
+  assert.equal(settlementYearOf({ date: "2027-01-10", forYear: "2027" }), "2027"); // 明確指定優先
+
+  const rows = [tx({ amount: 10000, date: "2026-12-31" }), tx({ amount: 5000, date: "2027-01-01" })];
+  const settlements = [
+    { ...led("柏文", 300, "2026-12-10"), forYear: "2026" },
+    { ...led("柏文", 100, "2027-01-10"), forYear: "2026" }, // 12 月分潤，1/10 出款
+    led("柏文", 50, "2027-01-20"), // 沒存年度 → 規則：1 月出款歸 2026
+    { ...led("柏文", 70, "2027-02-10"), forYear: "2027" },
+  ];
+  const m26 = memberEarnings(rows, settlements, [], "2026").find((r) => r.name === "柏文")!;
+  assert.equal(m26.annualNet, 1000);
+  assert.equal(m26.settled, 450); // 300 + 100 + 50
+  assert.equal(m26.unsettledNet, 550);
+  const m27 = memberEarnings(rows, settlements, [], "2027").find((r) => r.name === "柏文")!;
+  assert.equal(m27.settled, 70);
+  // 反方向：若誤用出款日年度，2027 會變 220、2026 只剩 300
+  assert.notEqual(m27.settled, 220);
+  assert.deepEqual(yearsOf(settlements, "2026"), ["2027", "2026"]);
 });
 
 test("排除成員：正規化去重排序、分組鍵不分順序、非成員與全排除丟錯", () => {
