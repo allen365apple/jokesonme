@@ -1,4 +1,4 @@
-// 開發票的狀態規則（spec dev-tickets「Ticket status transitions」）。純函式，網頁按鈕與 server action 共用同一套判斷。
+// 開發頁的狀態規則（spec dev-tickets「Ticket status transitions」）。純函式，網頁按鈕與 server action 共用同一套判斷。
 // 寫入由資料庫函式 dev_ticket_apply 比對 expectStatus／expectOwner 後原子完成（「Conflict-safe claiming」）。
 import type { Role } from "../auth/access.ts";
 
@@ -75,7 +75,7 @@ export function planTransition(
   actor: TicketActor,
   opts: { note?: string; edit?: EditFields } = {},
 ): Plan {
-  if (actor.role !== "admin" && actor.role !== "member") return no("你沒有開發票的權限");
+  if (actor.role !== "admin" && actor.role !== "member") return no("你沒有開發頁的權限");
   const isAdmin = actor.role === "admin";
   const isReporter = actor.id === t.reporterId;
   const isOwner = t.ownerId !== null && actor.id === t.ownerId;

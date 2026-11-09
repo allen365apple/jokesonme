@@ -1,5 +1,5 @@
 "use client";
-// 開發票的互動層（spec dev-tickets）：卡片列表、票頁（輪到誰、按鈕、描述、歷史、開工指令）、發布與編輯表單。
+// 開發頁的互動層（spec dev-tickets）：卡片列表、票頁（輪到誰、按鈕、描述、歷史、開工指令）、發布與編輯表單。
 // 按鈕只顯示伺服器算好的 allowedActions；送出後伺服器會再判斷一次，失敗原因用中文顯示。
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -55,7 +55,7 @@ export default function TicketBoard(props: {
         ))
       )}
 
-      <button className="fab" type="button" aria-label="發布開發票" onClick={() => setCreating(true)}><IconPlus /></button>
+      <button className="fab" type="button" aria-label="開一張票" onClick={() => setCreating(true)}><IconPlus /></button>
 
       {creating ? (
         <TicketForm
@@ -85,7 +85,7 @@ function TicketForm({ ticket, onClose, onDone }: { ticket?: TicketView; onClose:
   return (
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="tk-form-title" onClick={(e) => e.stopPropagation()}>
-        <h2 id="tk-form-title">{ticket ? `編輯 T-${ticket.number}` : "發布開發票"}</h2>
+        <h2 id="tk-form-title">{ticket ? `編輯 T-${ticket.number}` : "開一張票"}</h2>
         {error ? <div className="notice bad" role="alert">{error}</div> : null}
         <form
           onSubmit={(e) => {

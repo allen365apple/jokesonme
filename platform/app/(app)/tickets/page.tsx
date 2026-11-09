@@ -14,7 +14,7 @@ function q(params: Record<string, string | undefined>): string {
   return s ? `/tickets?${s}` : "/tickets";
 }
 
-// 開發票（spec dev-tickets「Ticket board page」）：進行中／已結案分頁、只看我的、?t=<n> 開票頁。
+// 開發頁（spec dev-tickets「Ticket board page」）：進行中／已結案分頁、只看我的、?t=<n> 開票頁。
 export default async function TicketsPage({ searchParams }: PageProps<"/tickets">) {
   const sp = await searchParams;
   const seg = sp.seg === "closed" ? "closed" : "active";
@@ -45,8 +45,8 @@ export default async function TicketsPage({ searchParams }: PageProps<"/tickets"
   const base = { seg: seg === "closed" ? "closed" : undefined, mine: mine ? "1" : undefined };
   return (
     <main className="page">
-      <TopBar me={me} title="開發票" sub="平台要改什麼、誰在做、做完了沒" />
-      <nav className="seg-tabs" aria-label="開發票分頁">
+      <TopBar me={me} title="開發" sub="平台要改什麼、誰在做、做完了沒" />
+      <nav className="seg-tabs" aria-label="開發頁分頁">
         <Link className={seg === "active" ? "on" : ""} href={q({ mine: base.mine })}>進行中 <span className="count">{active.length}</span></Link>
         <Link className={seg === "closed" ? "on" : ""} href={q({ seg: "closed", mine: base.mine })}>已結案 <span className="count">{closed.length}</span></Link>
       </nav>
@@ -60,7 +60,7 @@ export default async function TicketsPage({ searchParams }: PageProps<"/tickets"
           names={names}
           detail={detail}
           listHref={q(base)}
-          emptyText={mine ? "目前沒有你開的或你認領的票。" : seg === "active" ? "目前沒有進行中的開發票。按右下角的＋開第一張。" : "還沒有結案的票。"}
+          emptyText={mine ? "目前沒有你開的或你認領的票。" : seg === "active" ? "目前沒有進行中的票。按右下角的＋開第一張。" : "還沒有結案的票。"}
           initialNew={sp.new === "1"}
         />
       </div>

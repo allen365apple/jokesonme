@@ -593,7 +593,7 @@ a.notice { display: block; }
 .inbox-line .btn { flex: none; }
 .quick-entry .filter-chips button.on { background: var(--brand); border-color: var(--brand); color: #fff; }
 
-/* 開發票（spec dev-tickets）：只用既有 token，狀態色沿用成功／警示／品牌色 */
+/* 開發頁（spec dev-tickets）：只用既有 token，狀態色沿用成功／警示／品牌色 */
 .tk-card { text-decoration: none; color: inherit; }
 .tk-no { font-variant-numeric: tabular-nums; color: var(--ink-3); font-weight: 500; margin-right: 2px; }
 .tk-status.tk-open { background: var(--brand-4); color: var(--brand-deep); }

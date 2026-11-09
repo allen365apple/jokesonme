@@ -12,7 +12,7 @@ test("spec 權限表", () => {
   assert.deepEqual(allowed(u("finance_partner")), ["finance"]);
 });
 
-test("財務夥伴碰開發票回 403", () => {
+test("財務夥伴碰開發頁回 403", () => {
   assert.deepEqual(checkAccess(u("finance_partner"), "tickets"), { ok: false, status: 403, reason: "finance_partner cannot access tickets" });
 });
 
