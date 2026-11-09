@@ -55,7 +55,15 @@ export async function actOnTicket(fd: FormData): Promise<TicketResult> {
     note: str(fd, "note"),
     edit: action === "edit" ? { title: str(fd, "title"), category: str(fd, "category"), description: str(fd, "description") } : undefined,
   });
-  if (!plan.ok) return { ok: false, error: plan.reason };
+  if (!plan.ok) {
+    // 畫面還停在「沒人認領」但其實已被別人認領（spec「Conflict-safe claiming」）：講清楚是誰
+    if (action === "claim" && ticket.ownerId && ticket.ownerId !== me.id) {
+      revalidatePath("/tickets");
+      const who = nameMap(await listUsers(actor)).get(ticket.ownerId) ?? "別人";
+      return { ok: false, error: `T-${ticket.number} 剛被 ${who} 認領了，重新整理看看` };
+    }
+    return { ok: false, error: plan.reason };
+  }
 
   const { data, error } = await db(actor).rpc("dev_ticket_apply", {
     p_id: ticket.id,
