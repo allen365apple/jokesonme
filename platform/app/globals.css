@@ -615,3 +615,17 @@ a.notice { display: block; }
 .tk-history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: var(--fs-secondary); }
 .tk-history li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; }
 .tk-history li > span:first-child { color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* 連結 Claude（change claude-ticket-tools）：只用既有 token */
+.cl { margin-bottom: 16px; }
+.cl-title { font-size: var(--fs-title); margin: 0 0 6px; }
+.cl-sub { font-size: var(--fs-body); margin: 16px 0 8px; }
+.cl-hint { color: var(--ink-2); font-size: var(--fs-secondary); margin: 0 0 10px; line-height: 1.6; }
+.cl-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 14px; font-size: var(--fs-body); }
+.cl-steps b { display: block; margin-bottom: 6px; }
+.cl-line { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; min-width: 0; }
+.cl-code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 10px; padding: 9px 12px; font-size: var(--fs-secondary); }
+.cl-devices { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.cl-devices li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface-2); border-radius: 12px; }
+.cl-devices .row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cl-devices small { color: var(--ink-2); font-size: var(--fs-secondary); }

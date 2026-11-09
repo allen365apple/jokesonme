@@ -2,8 +2,9 @@
 // 只能在伺服器端使用：SUPABASE_SECRET_KEY 絕不能送到瀏覽器。
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-/** actor 格式：真人 `user:<LINE userId>`；系統 `line-bot` / `reminder-job` / `calendar-sync` / `migration`。 */
-export type Actor = `user:${string}` | "line-bot" | "reminder-job" | "calendar-sync" | "migration";
+/** actor 格式：真人 `user:<LINE userId>`；系統 `line-bot` / `reminder-job` / `calendar-sync` / `migration`；
+ *  `claude-api` 只用在「用金鑰找出是誰」的讀取，找到人之後的寫入一律用 `user:<id>`（change claude-ticket-tools）。 */
+export type Actor = `user:${string}` | "line-bot" | "reminder-job" | "calendar-sync" | "migration" | "claude-api";
 
 export function db(actor: Actor): SupabaseClient {
   const url = process.env.SUPABASE_URL;
