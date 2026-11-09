@@ -1,5 +1,5 @@
 "use server";
-// 開發票的寫入（spec dev-tickets）。每個 action 先過角色守門，用 planTransition 判斷能不能做，
+// 開發頁的寫入（spec dev-tickets）。每個 action 先過角色守門，用 planTransition 判斷能不能做，
 // 再交給資料庫函式 dev_ticket_apply 比對「看到的狀態與認領人」後原子寫入（spec「Conflict-safe claiming」）。
 import { revalidatePath } from "next/cache";
 import { requireAction } from "@/lib/auth/current";
@@ -21,7 +21,7 @@ async function guard() {
   try {
     return { me: await requireAction("tickets") };
   } catch {
-    return { error: "你沒有開發票的權限" };
+    return { error: "你沒有開發頁的權限" };
   }
 }
 

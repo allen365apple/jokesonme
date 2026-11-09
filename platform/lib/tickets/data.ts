@@ -1,4 +1,4 @@
-// 開發票的讀取（spec dev-tickets）。寫入在 app/(app)/tickets/actions.ts。只能在伺服器端用。
+// 開發頁的讀取（spec dev-tickets）。寫入在 app/(app)/tickets/actions.ts。只能在伺服器端用。
 import { db, type Actor } from "../supabase.ts";
 import type { TicketAction, TicketCategory, TicketStatus } from "./flow.ts";
 
