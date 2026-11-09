@@ -111,9 +111,10 @@
 
 裝了看我笑話外掛之後，可以在任何資料夾請 Claude 開票、查票、認領、交付、驗收、退回、標不做，規則跟網頁一樣，票記在你本人名下。編輯票、重新開放「不做」的票只能在網頁上做。
 
-1. **安裝外掛（每台電腦一次）**：在 Claude Code 或桌面 App 的 Code 分頁輸入下面兩行，各按一次 Enter，再重新開啟 Claude。
-   - `/plugin marketplace add jokesonme-studio/jokesonme-plugins`
-   - `/plugin install jokesonme@jokesonme`
+1. **安裝外掛（每台電腦一次，用 Claude 桌面版）**：打開 Code 分頁，把平台「我的」→「連結 Claude」第一步那段話複製貼給 Claude，內容是：
+   > 請幫我安裝看我笑話外掛：先備份 ~/.claude/settings.json，然後在 extraKnownMarketplaces 加上 "jokesonme"（source 是 github，repo 是 jokesonme-studio/jokesonme-plugins），在 enabledPlugins 加上 "jokesonme@jokesonme": true，其他設定都不要動。
+
+   Claude 改好後開一個新對話，問「我連好看我笑話了嗎？」，看到連結說明就是裝好了。
 2. **連結帳號**：平台「我的」→「連結 Claude」→「產生連結碼」，把那句「連結看我笑話，代碼 jk_link_…」貼給 Claude。連結碼 10 分鐘內有效、只能用一次。
 3. **撤銷**：不用了或電腦遺失，到同一個地方按「撤銷」，那台電腦立刻失效。
 
