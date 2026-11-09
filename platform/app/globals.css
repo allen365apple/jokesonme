@@ -592,3 +592,26 @@ a.notice { display: block; }
 .inbox-line input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--brand); flex: none; }
 .inbox-line .btn { flex: none; }
 .quick-entry .filter-chips button.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+/* 開發票（spec dev-tickets）：只用既有 token，狀態色沿用成功／警示／品牌色 */
+.tk-card { text-decoration: none; color: inherit; }
+.tk-no { font-variant-numeric: tabular-nums; color: var(--ink-3); font-weight: 500; margin-right: 2px; }
+.tk-status.tk-open { background: var(--brand-4); color: var(--brand-deep); }
+.tk-status.tk-in_progress { background: var(--warning-bg); color: var(--warning); }
+.tk-status.tk-review { background: var(--brand-3); color: var(--brand-deep); }
+.tk-status.tk-done { background: var(--success-bg); color: var(--success); }
+.tk-status.tk-wontfix { background: var(--ground-2); color: var(--ink-3); }
+.tk-filter { display: inline-flex; align-self: flex-start; width: fit-content; align-items: center; min-height: 36px; padding: 0 14px; margin-bottom: 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); font-size: var(--fs-secondary); font-weight: 500; }
+.tk-filter.on { background: var(--brand-4); border-color: var(--brand-3); color: var(--brand-deep); font-weight: 700; }
+.tk-sheet h2 { margin: 8px 0 4px; }
+.tk-people { color: var(--ink-2); font-size: var(--fs-secondary); margin: 0 0 12px; }
+.tk-actions { flex-wrap: wrap; margin-bottom: 12px; }
+.tk-note { margin-bottom: 12px; }
+.tk-desc { font-size: var(--fs-input); line-height: 1.7; }
+.tk-kickoff { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 16px; background: var(--surface); }
+.tk-kickoff-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.tk-hint { color: var(--ink-2); font-size: var(--fs-secondary); margin: 8px 0 0; }
+.tk-h { display: block; margin-bottom: 8px; font-size: var(--fs-body); }
+.tk-history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: var(--fs-secondary); }
+.tk-history li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; }
+.tk-history li > span:first-child { color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }

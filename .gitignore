@@ -11,6 +11,7 @@ RAW DATA/
 # 新平台（platform/）的金鑰與建置產物，永不進版控（jokesonme-platform-v2 task 1.1）
 .env*
 platform/.env*
+!platform/.env.example
 platform/.dev.vars
 platform/.open-next/
 platform/.next/

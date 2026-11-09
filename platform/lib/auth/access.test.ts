@@ -2,14 +2,18 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { checkAccess, type Area, type SessionUser } from "./access.ts";
 
-const areas: Area[] = ["todos", "ideas", "planning", "messages", "finance", "admin"];
+const areas: Area[] = ["todos", "ideas", "planning", "messages", "finance", "tickets", "admin"];
 const u = (role: SessionUser["role"], status: SessionUser["status"] = "approved"): SessionUser => ({ id: "U", role, status });
 const allowed = (user: SessionUser | null) => areas.filter((a) => checkAccess(user, a).ok);
 
 test("spec 權限表", () => {
   assert.deepEqual(allowed(u("admin")), areas);
-  assert.deepEqual(allowed(u("member")), ["todos", "ideas", "planning", "messages", "finance"]);
+  assert.deepEqual(allowed(u("member")), ["todos", "ideas", "planning", "messages", "finance", "tickets"]);
   assert.deepEqual(allowed(u("finance_partner")), ["finance"]);
+});
+
+test("財務夥伴碰開發票回 403", () => {
+  assert.deepEqual(checkAccess(u("finance_partner"), "tickets"), { ok: false, status: 403, reason: "finance_partner cannot access tickets" });
 });
 
 test("財務夥伴讀待辦回 403", () => {

@@ -2,13 +2,13 @@
 
 export type Role = "admin" | "member" | "finance_partner";
 export type UserStatus = "pending" | "approved" | "revoked";
-export type Area = "todos" | "ideas" | "planning" | "messages" | "finance" | "admin";
+export type Area = "todos" | "ideas" | "planning" | "messages" | "finance" | "tickets" | "admin";
 
 export type SessionUser = { id: string; role: Role | null; status: UserStatus };
 
 const ALLOWED: Record<Role, ReadonlySet<Area>> = {
-  admin: new Set<Area>(["todos", "ideas", "planning", "messages", "finance", "admin"]),
-  member: new Set<Area>(["todos", "ideas", "planning", "messages", "finance"]),
+  admin: new Set<Area>(["todos", "ideas", "planning", "messages", "finance", "tickets", "admin"]),
+  member: new Set<Area>(["todos", "ideas", "planning", "messages", "finance", "tickets"]),
   finance_partner: new Set<Area>(["finance"]),
 };
 

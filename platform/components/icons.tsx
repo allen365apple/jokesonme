@@ -19,4 +19,5 @@ export const IconEdit = svg(<><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="M13.5
 export const IconChevron = svg(<path d="M9 5l7 7-7 7" />);
 export const IconChevronLeft = svg(<path d="M15 5l-7 7 7 7" />);
 export const IconHome = svg(<><path d="M4 11l8-7 8 7" /><path d="M6 10v10h12V10" /><path d="M10 20v-6h4v6" /></>);
+export const IconTicket = svg(<><path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h13A1.5 1.5 0 0 1 20 7.5V10a2 2 0 0 0 0 4v2.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 16.5V14a2 2 0 0 0 0-4z" /><path d="M14 6v12" strokeDasharray="2 2.5" /></>);
 export const IconInbox = svg(<><path d="M4 13l2.5-8h11L20 13v6H4z" /><path d="M4 13h5l1.5 2.5h3L15 13h5" /></>);
