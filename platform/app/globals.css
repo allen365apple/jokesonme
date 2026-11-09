@@ -625,6 +625,7 @@ a.notice { display: block; }
 .cl-steps b { display: block; margin-bottom: 6px; }
 .cl-line { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; min-width: 0; }
 .cl-code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 10px; padding: 9px 12px; font-size: var(--fs-secondary); }
+.cl-code.cl-wrap { white-space: pre-wrap; word-break: break-word; overflow-x: visible; line-height: 1.6; resize: none; }
 .cl-devices { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .cl-devices li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface-2); border-radius: 12px; }
 .cl-devices .row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }

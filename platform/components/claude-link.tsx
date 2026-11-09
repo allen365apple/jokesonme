@@ -7,16 +7,18 @@ import { formatTaipeiDateTime } from "@/lib/dates";
 
 export type DeviceView = { id: string; deviceName: string; createdAt: string; lastUsedAt: string | null };
 
-const INSTALL = ["/plugin marketplace add jokesonme-studio/jokesonme-plugins", "/plugin install jokesonme@jokesonme"];
+// 桌面版 Claude 的安裝方式：請 Code 分頁裡的 Claude 改設定檔（Jesse 2026-11-09 實際裝成功的做法）
+const INSTALL_PROMPT =
+  "請幫我安裝看我笑話外掛：先備份 ~/.claude/settings.json，然後在 extraKnownMarketplaces 加上 \"jokesonme\"（source 是 github，repo 是 jokesonme-studio/jokesonme-plugins），在 enabledPlugins 加上 \"jokesonme@jokesonme\": true，其他設定都不要動。";
 
-function CopyLine({ text }: { text: string }) {
+function CopyLine({ text, wrap = false }: { text: string; wrap?: boolean }) {
   const [state, setState] = useState<"idle" | "done" | "select">("idle");
   return (
     <div className="cl-line">
       {state === "select" ? (
-        <input className="input cl-code" readOnly value={text} ref={(el) => el?.select()} aria-label="請按 ⌘C 複製" />
+        <textarea className="input cl-code cl-wrap" readOnly value={text} rows={wrap ? 4 : 1} ref={(el) => el?.select()} aria-label="請按 ⌘C 複製" />
       ) : (
-        <code className="cl-code">{text}</code>
+        <code className={`cl-code${wrap ? " cl-wrap" : ""}`}>{text}</code>
       )}
       <button
         className="btn btn-ghost"
@@ -50,8 +52,9 @@ export default function ClaudeLink({ devices }: { devices: DeviceView[] }) {
 
       <ol className="cl-steps">
         <li>
-          <b>第一次用：在 Claude 安裝看我笑話外掛</b>（在 Claude 輸入這兩行，各按一次 Enter）
-          {INSTALL.map((l) => <CopyLine key={l} text={l} />)}
+          <b>第一次用：在 Claude 桌面版安裝看我笑話外掛</b>
+          打開 Claude 桌面版的 Code 分頁，把下面這段話貼給 Claude。它改好設定後，開一個新對話，問「我連好看我笑話了嗎？」，看到連結說明就是裝好了。
+          <CopyLine text={INSTALL_PROMPT} wrap />
         </li>
         <li>
           <b>產生連結碼，把出現的那句話貼給 Claude</b>
