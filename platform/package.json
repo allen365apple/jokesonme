@@ -13,7 +13,8 @@
     "typecheck": "next typegen && tsc --noEmit -p tsconfig.json",
     "test": "node --test --experimental-strip-types \"lib/**/*.test.ts\"",
     "test:db": "bash scripts/test-db.sh",
-    "db:migrate": "bash scripts/db-migrate.sh"
+    "db:migrate": "bash scripts/db-migrate.sh",
+    "db:seed-dev": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/seed-dev.mts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
