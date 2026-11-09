@@ -106,3 +106,17 @@
 - 認領人不能驗收自己做的票；開票的人自己做的票由管理員驗收。
 - 做不下去就按「取消認領」，把票放回去給別人。
 - 開票時照四段寫：現在怎樣、希望變成、做完看得到什麼（驗收）、誰會用、誰看得到。寫得越清楚，接手的人和 Claude 越不會做錯。
+
+## 七、用 Claude 開票、操作票
+
+裝了看我笑話外掛之後，可以在任何資料夾請 Claude 開票、查票、認領、交付、驗收、退回、標不做，規則跟網頁一樣，票記在你本人名下。編輯票、重新開放「不做」的票只能在網頁上做。
+
+1. **安裝外掛（每台電腦一次）**：在 Claude Code 或桌面 App 的 Code 分頁輸入下面兩行，各按一次 Enter，再重新開啟 Claude。
+   - `/plugin marketplace add jokesonme-studio/jokesonme-plugins`
+   - `/plugin install jokesonme@jokesonme`
+2. **連結帳號**：平台「我的」→「連結 Claude」→「產生連結碼」，把那句「連結看我笑話，代碼 jk_link_…」貼給 Claude。連結碼 10 分鐘內有效、只能用一次。
+3. **撤銷**：不用了或電腦遺失，到同一個地方按「撤銷」，那台電腦立刻失效。
+
+開票前 Claude 會先問清楚四段、查有沒有重複，把草稿列給你確認，你說好才開。連結用的金鑰只能操作開發頁，碰不到財務等其他資料。
+
+外掛的程式在 `jokesonme-studio/jokesonme-plugins`；平台這邊的 API 在 `platform/app/api/claude/`，規格是 `openspec/specs/claude-ticket-tools/`（封存後）。改了 API 的參數或回傳格式，要在同一次改動裡一起改外掛，並把 `platform/lib/claude/tokens.ts` 的 `API_VERSION` 加一。

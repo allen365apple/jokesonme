@@ -55,3 +55,10 @@ export async function listTicketEvents(actor: Actor, ticketId: string): Promise<
   if (error) throw new Error(`list dev ticket events: ${error.message}`);
   return (data ?? []).map((e) => ({ id: e.id, actorId: e.actor_id, action: e.action, note: e.note, at: e.at }));
 }
+
+export async function getTicketByNumber(actor: Actor, number: number): Promise<TicketView | null> {
+  if (!Number.isInteger(number) || number < 1) return null;
+  const { data, error } = await db(actor).from("dev_tickets").select(TICKET_COLUMNS).eq("number", number).maybeSingle<TicketRow>();
+  if (error) throw new Error(`read dev ticket: ${error.message}`);
+  return data ? toView(data) : null;
+}
