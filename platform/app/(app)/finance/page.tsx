@@ -1,24 +1,26 @@
 import Link from "next/link";
 import { requirePage } from "@/lib/auth/current";
 import { listLedger, listTransactions } from "@/lib/finance/data";
-import { listShows, seriesOf } from "@/lib/shows";
-import { commonFund, incomeComposition, inYear, memberEarnings, MEMBERS, monthlyTrend, taxReserveSummary, yearsOf, yearSummary } from "@/lib/finance/calc";
+import { listShows, pickableShows, seriesOf, toPickerData } from "@/lib/shows";
+import { commonFund, INCOME_CATEGORIES, MANUAL_EXPENSE_CATEGORIES, incomeComposition, inYear, memberEarnings, MEMBERS, monthlyTrend, taxReserveSummary, yearsOf, yearSummary } from "@/lib/finance/calc";
 import { membershipByMonth } from "@/lib/finance/members";
 import { countPendingLines, listMembershipLines } from "@/lib/finance/oen";
 import { financeSchedule, nextProcessingLabel } from "@/lib/finance/schedule";
 import { todayInTaipei } from "@/lib/dates";
+import { displayName } from "@/lib/auth/users";
 import FinanceHead, { FORECAST_URL } from "@/components/finance-head";
 import FinanceSchedule from "@/components/finance-schedule";
 import FinanceYearSelect from "@/components/finance-year-select";
 import LedgerButtons from "@/components/ledger-sheet";
 import { CompositionChart, MembershipChart, MonthlyChart } from "@/components/charts";
 import ShowPnlTable from "@/components/show-pnl-table";
+import FinanceQuickAdd from "@/components/finance-quick-add";
 import { IconChevron } from "@/components/icons";
 
 const money = (n: number) => `${n < 0 ? "−" : ""}$${Math.abs(Math.round(n)).toLocaleString()}`;
 const cls = (n: number) => (n >= 0 ? "pos" : "neg");
 
-// 財務總覽（2026-11-03 改版）：年度選擇 → 年度 KPI → 每月收支圖＋收入組成 → 成員分潤卡 → 付費會員 → 演出收支列表 → 待確認
+// 財務總覽（2026-11-03 改版）：右下角＋新增收支（先選專案）→ 年度選擇 → 年度 KPI → 每月收支圖＋收入組成 → 成員分潤卡 → 付費會員 → 演出收支列表 → 待確認
 export default async function FinanceOverview({ searchParams }: PageProps<"/finance">) {
   const sp = await searchParams;
   const me = await requirePage("finance", "/finance");
@@ -43,6 +45,8 @@ export default async function FinanceOverview({ searchParams }: PageProps<"/fina
   const sort = typeof sp.sort === "string" ? sp.sort : undefined;
   const dir = typeof sp.dir === "string" ? sp.dir : undefined;
   const series = typeof sp.series === "string" ? sp.series : undefined;
+  const picker = toPickerData(pickableShows(shows, today));
+  const ledgers = shows.filter((s) => s.kind === "ledger").map((s) => ({ id: s.id, name: s.name })).sort((a, b) => a.name.localeCompare(b.name, "zh-Hant"));
 
   return (
     <main className="page">
@@ -53,6 +57,7 @@ export default async function FinanceOverview({ searchParams }: PageProps<"/fina
           <FinanceYearSelect years={years} value={year} />
           <span className="toolbar-note">{txs.length} 筆有效收支</span>
         </div>
+        <FinanceQuickAdd picker={picker} ledgers={ledgers} members={MEMBERS} incomeCategories={INCOME_CATEGORIES} expenseCategories={MANUAL_EXPENSE_CATEGORIES} me={displayName(me)} today={today} />
         <div className="grid-stats kpi">
           <div className="card"><small>收入</small><span className="amount pos">{money(sum.totalIncome)}</span></div>
           <div className="card"><small>成本</small><span className="amount neg">{money(sum.totalExpense)}</span><em>含稅務預留與退款</em></div>

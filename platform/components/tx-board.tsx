@@ -99,10 +99,11 @@ export default function TxBoard(props: {
   );
 }
 
-function TxSheet(props: {
+// 新增／編輯收支面板；財務總覽的「＋」也共用這一個（components/finance-quick-add.tsx），onBack 讓那邊回到選專案。
+export function TxSheet(props: {
   tx?: BoardTx; showId: string; showName: string; members: readonly string[]; incomeCategories: readonly string[];
   expenseCategories: readonly string[]; me: string; today: string;
-  onClose: () => void; onSave: (fd: FormData) => void; onDelete: (id: string) => void;
+  onClose: () => void; onSave: (fd: FormData) => void; onDelete: (id: string) => void; onBack?: () => void;
 }) {
   const t = props.tx;
   const [kind, setKind] = useState<"income" | "expense">(t && t.amount > 0 ? "income" : "expense");
@@ -191,6 +192,7 @@ function TxSheet(props: {
           </label>
           <div className="actions">
             <button className="btn btn-primary" type="submit">{t ? "儲存" : "新增"}</button>
+            {props.onBack ? <button className="btn btn-ghost" type="button" onClick={props.onBack}>換一個專案</button> : null}
             <button className="btn btn-ghost" type="button" onClick={props.onClose}>取消</button>
           </div>
         </form>
