@@ -1,15 +1,15 @@
--- 最後更新：2026-11-19 13:49
+-- 最後更新：2026-11-19 17:00
 -- 誰幫忙的：Claude Code（Claude Opus 5.5）
--- 修改摘要：新增工具箱資料表的本機資料庫測試（種子、網址檢查、調順序、權限）。
+-- 修改摘要：tools 資料表與 tools_move 的資料庫測試；種子改為 10 筆（3／6／1）。
 --
 -- 本機資料庫測試：工具箱（change tools-directory tasks 1.1–1.3）
 \set ON_ERROR_STOP on
 
--- 種子：共 11 筆，三區 4／6／1，全部 https，全部上架中，created_by 是 system:seed（要在其他測試寫入前檢查）
+-- 種子：共 10 筆，三區 3／6／1，全部 https，全部上架中，created_by 是 system:seed（要在其他測試寫入前檢查）
 do $$
 begin
-  if (select count(*) from tools) <> 11 then raise exception 'FAIL: expected 11 seeded tools, got %', (select count(*) from tools); end if;
-  if (select count(*) from tools where section = 'internal') <> 4 then raise exception 'FAIL: internal count'; end if;
+  if (select count(*) from tools) <> 10 then raise exception 'FAIL: expected 10 seeded tools, got %', (select count(*) from tools); end if;
+  if (select count(*) from tools where section = 'internal') <> 3 then raise exception 'FAIL: internal count'; end if;
   if (select count(*) from tools where section = 'live') <> 6 then raise exception 'FAIL: live count'; end if;
   if (select count(*) from tools where section = 'other') <> 1 then raise exception 'FAIL: other count'; end if;
   if exists (select 1 from tools where url !~ '^https://') then raise exception 'FAIL: seeded url not https'; end if;
@@ -111,7 +111,7 @@ begin
 
   -- 別區不受影響
   if (select string_agg(name, ',' order by position) from tools where section = 'internal')
-     <> '陪伴動物心理測驗,走心分享預覽,社群素材產生器,網頁製作須知' then
+     <> '走心分享預覽,社群素材產生器,網頁製作須知' then
     raise exception 'FAIL: other section changed';
   end if;
 
@@ -132,7 +132,7 @@ commit;
 -- 寫入都有操作紀錄，且記得是誰改的
 do $$
 begin
-  if (select count(*) from audit_log where table_name = 'tools' and actor = 'migration') < 11 then raise exception 'FAIL: seed not audited'; end if;
+  if (select count(*) from audit_log where table_name = 'tools' and actor = 'migration') < 10 then raise exception 'FAIL: seed not audited'; end if;
   if (select count(*) from audit_log where table_name = 'tools' and actor = 'user:U_a') < 1 then raise exception 'FAIL: user writes not audited'; end if;
 end $$;
 

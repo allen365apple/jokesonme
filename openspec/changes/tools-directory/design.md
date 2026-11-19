@@ -28,9 +28,9 @@
 同區上下調順序用資料庫函式 `tools_move(p_id uuid, p_dir int)`：在同一區、未下架的工具中找到相鄰那一筆，兩筆 `position` 在同一交易對調；已在最前或最後時不變。函式收回 public 的 execute，只授權 `service_role`。
 替代方案：在 app 端連續兩次 update——兩人同時調會出現重複 position，不選。
 
-### Seed eleven tools in the migration
+### Seed ten tools in the migration
 
-`0020_tools.sql` 直接 insert 第一版 11 筆（來源：`jokes-on-me/index.html` 工具箱卡片，相對網址補成 `https://allen365apple.github.io/jokes-on-me/...` 絕對網址；「看笑內部系統」「收支／財務記錄」兩張指回平台本身，不列）。現場投票的說明改成現在的隊名（攻隊對受隊）。`created_by` 記 `system:seed`。
+`0020_tools.sql` 直接 insert 第一版 10 筆（來源：`jokes-on-me/index.html` 工具箱卡片，相對網址補成 `https://allen365apple.github.io/jokes-on-me/...` 絕對網址；「看笑內部系統」「收支／財務記錄」兩張指回平台本身、「陪伴動物心理測驗」柏文決定不列）。現場投票的說明改成現在的隊名（攻隊對受隊）。`created_by` 記 `system:seed`。
 
 ### Tools area in access matrix
 
@@ -70,7 +70,7 @@
 
 **Acceptance criteria**
 - `npm run test`：`lib/tools.test.ts` 覆蓋 http/https 通過、`javascript:`／`ftp:`／無法解析的網址被擋、長度邊界、分區白名單；`lib/auth/access.test.ts` 覆蓋三種角色對 `tools` 的結果。
-- `npm run test:db`：`supabase/test/tools.test.sql` 驗證種子 11 筆且三區數量為 4／6／1、非 http(s) 網址被 check 擋、`tools_move` 對調與邊界不變、anon／authenticated 無權讀寫、沒有 DELETE 權限。
+- `npm run test:db`：`supabase/test/tools.test.sql` 驗證種子 10 筆且三區數量為 3／6／1、非 http(s) 網址被 check 擋、`tools_move` 對調與邊界不變、anon／authenticated 無權讀寫、沒有 DELETE 權限。
 - `npm run typecheck`、`npm run lint` 通過。
 - 本機用 `dev-member`、`dev-finance`、未登入三種身分各開一次 `/tools`，1280px 與 390px 各截圖一次；新增→重新整理仍在、編輯、上下移、下架→復原各走一次。
 
@@ -86,7 +86,7 @@
 
 ## Migration Plan
 
-- 合併後由 Jesse 對正式庫跑 `npm run db:migrate`，會建立 `tools` 並放入 11 筆。
+- 合併後由 Jesse 對正式庫跑 `npm run db:migrate`，會建立 `tools` 並放入 10 筆。
 - 回滾：撤掉 nav 項與頁面即可；`tools` 表留著不影響其他功能。
 
 ## Open Questions

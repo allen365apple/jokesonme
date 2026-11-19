@@ -1,13 +1,13 @@
 <!--
-最後更新：2026-11-19 13:57
+最後更新：2026-11-19 17:00
 誰幫忙的：Claude Code（Claude Opus 5.5）
-修改摘要：勾選已完成的 1.1～4.1；4.2 的截圖與瀏覽器點擊待柏文驗收，維持未勾。
+修改摘要：種子改為 10 筆（拿掉陪伴動物心理測驗）；新增 3.4 emoji 選擇器；全部任務已完成。
 -->
 ## 1. 資料庫
 
 - [x] 1.1 新增 `platform/supabase/migrations/0020_tools.sql`，照 design「Tools table with soft delete」建立 `tools` 表（分區白名單、長度 check、網址 `^https?://` check、`archived_at` 軟刪除），開 RLS 不加 policy、收回 public／anon／authenticated、`service_role` 只給 select／insert／update、`select attach_audit('tools')`，結尾寫入 `_migrations`；滿足「Tool records are server-side and audited」。驗證：`platform/supabase/test/tools.test.sql` 斷言 anon、authenticated 讀寫被拒、`service_role` 沒有 DELETE 權限、`javascript:` 網址 insert 失敗，`npm run test:db` 通過。
 - [x] 1.2 在同一支 migration 照 design「Atomic reorder function tools_move」新增 `tools_move(p_id uuid, p_dir int)`：同區未下架的相鄰兩筆在一個交易內對調 `position`，最前上移／最後下移不變，archived 不參與；收回 public execute、只授權 `service_role`；滿足「Reorder tools within a section」的資料層。驗證：`tools.test.sql` 斷言對調結果、兩個邊界不變、跳過已下架的工具。[after: 1.1]
-- [x] 1.3 在同一支 migration 照 design「Seed eleven tools in the migration」放入「Initial tool catalog」的 11 筆（相對網址補成絕對網址、現場投票說明寫攻隊對受隊、`created_by` 為 `system:seed`、各區 position 照表順序）。驗證：`tools.test.sql` 斷言共 11 筆、`internal`／`live`／`other` 為 4／6／1、每筆網址都是 https。[after: 1.1]
+- [x] 1.3 在同一支 migration 照 design「Seed ten tools in the migration」放入「Initial tool catalog」的 10 筆（相對網址補成絕對網址、現場投票說明寫攻隊對受隊、`created_by` 為 `system:seed`、各區 position 照表順序）。驗證：`tools.test.sql` 斷言共 10 筆、`internal`／`live`／`other` 為 3／6／1、每筆網址都是 https。[after: 1.1]
 
 ## 2. 權限與純函式
 
@@ -26,4 +26,4 @@
 ## 4. 驗證
 
 - [x] 4.1 在 `platform/` 跑 `npm run test`、`npm run test:db`、`npm run typecheck`、`npm run lint`，輸出各寫進檔案再看，全部通過。[after: 1.3, 3.2, 3.3]
-- [x] 4.2 本機 `npm run db:migrate` 後用 `npm run dev`：以 `dev-member` 在 1280px 與 390px 開 `/tools` 截圖；新增一筆→重新整理仍在、編輯改分區、上移／下移、下架→復原各走一次；以 `dev-finance` 開 `/tools` 被導回財務首頁；未登入開 `/tools` 被導去登入頁；逐一點 11 張卡確認新分頁開對網址（社群素材產生器目前 404，記錄在 PR）。[after: 4.1]
+- [x] 4.2 本機 `npm run db:migrate` 後用 `npm run dev`：以 `dev-member` 在 1280px 與 390px 開 `/tools` 截圖；新增一筆→重新整理仍在、編輯改分區、上移／下移、下架→復原各走一次；以 `dev-finance` 開 `/tools` 被導回財務首頁；未登入開 `/tools` 被導去登入頁；逐一點全部卡片確認新分頁開對網址（社群素材產生器目前 404，記錄在 PR）。[after: 4.1]

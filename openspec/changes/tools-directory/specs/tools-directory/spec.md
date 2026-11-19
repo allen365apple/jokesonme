@@ -115,11 +115,10 @@ Tool records SHALL be stored in the platform database table `tools` with row lev
 
 ### Requirement: Initial tool catalog
 
-The migration that creates `tools` SHALL insert these eleven tools so that the page is populated after deployment:
+The migration that creates `tools` SHALL insert these ten tools so that the page is populated after deployment:
 
 | Section | Icon | Name | URL |
 | ------- | ---- | ---- | --- |
-| internal | 🦦 | 陪伴動物心理測驗 | `https://allen365apple.github.io/jokes-on-me/companion-animals.html` |
 | internal | 💌 | 走心分享預覽 | `https://allen365apple.github.io/jokes-on-me/member-only-content/latest.html` |
 | internal | 🎨 | 社群素材產生器 | `https://jessechen-humanoid.github.io/jokesonme-post/` |
 | internal | 📋 | 網頁製作須知 | `https://allen365apple.github.io/jokes-on-me/web-guide.html` |
@@ -136,4 +135,4 @@ Within each section the tools SHALL be positioned in the table order.
 #### Scenario: Fresh database after migration
 
 - **WHEN** the migration runs on an empty database
-- **THEN** `tools` holds eleven listed rows: four `internal`, six `live`, one `other`
+- **THEN** `tools` holds ten listed rows: three `internal`, six `live`, one `other`

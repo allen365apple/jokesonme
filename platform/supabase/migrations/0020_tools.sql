@@ -1,6 +1,6 @@
--- 最後更新：2026-11-19 13:49
+-- 最後更新：2026-11-19 17:00
 -- 誰幫忙的：Claude Code（Claude Opus 5.5）
--- 修改摘要：新增工具箱資料表 tools、同區調順序函式 tools_move 與第一版 11 筆工具。
+-- 修改摘要：新增工具箱資料表 tools、同區調順序函式 tools_move 與第一版 10 筆工具（不含陪伴動物心理測驗）。
 --
 -- 0020 工具箱（change tools-directory；spec tools-directory）
 -- 工具清單存在 Supabase。下架是軟刪除（寫 archived_at），復原清空；沒有 DELETE 權限。
@@ -74,19 +74,17 @@ end $$;
 revoke all on function tools_move(uuid, int) from public, anon, authenticated;
 grant execute on function tools_move(uuid, int) to service_role;
 
--- 第一版 11 筆（來源：GitHub Pages 工具箱首頁 jokes-on-me/index.html；「看笑內部系統」「收支／財務記錄」指回平台本身，不列）
+-- 第一版 10 筆（來源：GitHub Pages 工具箱首頁 jokes-on-me/index.html；「看笑內部系統」「收支／財務記錄」指回平台本身、「陪伴動物心理測驗」柏文決定不列）
 do $$
 begin
   perform set_config('app.actor', 'migration', true);
   insert into tools (section, icon, name, description, url, position, created_by) values
-    ('internal', '🦦', '陪伴動物心理測驗', '測你怎麼陪人、想被怎麼陪。8 題生成 16 種台灣關係現場感的陪伴動物。',
-      'https://allen365apple.github.io/jokes-on-me/companion-animals.html', 1, 'system:seed'),
     ('internal', '💌', '走心分享預覽', '當月會員電子報預覽圖下載＋全文閱讀。每位成員一張 IG 預覽圖可下載。',
-      'https://allen365apple.github.io/jokes-on-me/member-only-content/latest.html', 2, 'system:seed'),
+      'https://allen365apple.github.io/jokes-on-me/member-only-content/latest.html', 1, 'system:seed'),
     ('internal', '🎨', '社群素材產生器', '快速做出看我笑話風格的貼文圖片素材，發文不用再等設計。',
-      'https://jessechen-humanoid.github.io/jokesonme-post/', 3, 'system:seed'),
+      'https://jessechen-humanoid.github.io/jokesonme-post/', 2, 'system:seed'),
     ('internal', '📋', '網頁製作須知', '做現場喜劇投影網頁的重點摘要，可下載完整版規範。',
-      'https://allen365apple.github.io/jokes-on-me/web-guide.html', 4, 'system:seed'),
+      'https://allen365apple.github.io/jokes-on-me/web-guide.html', 3, 'system:seed'),
     ('live', '💗', '看我戀愛', '現場即興劇投影、選角、觀眾投稿與答案抽選工具。',
       'https://allen365apple.github.io/jokes-on-me/love-improv/index.html', 1, 'system:seed'),
     ('live', '⚔️', '看我笑話現場投票', '攻隊對受隊。觀眾手機一場一票，最後一起揭曉勝隊。',
