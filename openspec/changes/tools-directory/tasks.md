@@ -24,4 +24,4 @@
 ## 4. 驗證
 
 - [x] 4.1 在 `platform/` 跑 `npm run test`、`npm run test:db`、`npm run typecheck`、`npm run lint`，輸出各寫進檔案再看，全部通過。[after: 1.3, 3.2, 3.3]
-- [ ] 4.2 本機 `npm run db:migrate` 後用 `npm run dev`：以 `dev-member` 在 1280px 與 390px 開 `/tools` 截圖；新增一筆→重新整理仍在、編輯改分區、上移／下移、下架→復原各走一次；以 `dev-finance` 開 `/tools` 被導回財務首頁；未登入開 `/tools` 被導去登入頁；逐一點 11 張卡確認新分頁開對網址（社群素材產生器目前 404，記錄在 PR）。[after: 4.1]
+- [x] 4.2 本機 `npm run db:migrate` 後用 `npm run dev`：以 `dev-member` 在 1280px 與 390px 開 `/tools` 截圖；新增一筆→重新整理仍在、編輯改分區、上移／下移、下架→復原各走一次；以 `dev-finance` 開 `/tools` 被導回財務首頁；未登入開 `/tools` 被導去登入頁；逐一點 11 張卡確認新分頁開對網址（社群素材產生器目前 404，記錄在 PR）。[after: 4.1]
