@@ -25,7 +25,7 @@ Each tool card SHALL be a link to the tool's stored `url` that opens in a new br
 
 ### Requirement: Members add and edit tools
 
-`admin` and `member` users SHALL be able to add a tool from `/tools` by entering icon, name, description, URL, and section, and SHALL be able to edit every one of those fields on an existing tool. A newly added tool, and a tool whose section is changed, SHALL be placed last in its section. After a successful save the card SHALL appear without a manual reload and SHALL still be present after reloading.
+`/tools` SHALL show a 編輯 toggle next to 新增工具. While the toggle is off, cards SHALL show only icon, name, and description, with no per-card controls and no 已下架 list; turning it on (the button then reads 完成) SHALL reveal each card's edit, move up, move down, and archive controls and the 已下架 list, and SHALL stay on after any of those actions until 完成 is pressed. `admin` and `member` users SHALL be able to add a tool from `/tools` by entering icon, name, description, URL, and section, and SHALL be able to edit every one of those fields on an existing tool. A newly added tool, and a tool whose section is changed, SHALL be placed last in its section. After a successful save the card SHALL appear without a manual reload and SHALL still be present after reloading.
 
 #### Scenario: Add a tool
 
@@ -73,7 +73,7 @@ The system SHALL reject a tool save and show a plain-Chinese message, writing no
 
 ### Requirement: Archive and restore tools
 
-`admin` and `member` users SHALL be able to archive (下架) a tool; archiving SHALL set `archived_at` and SHALL NOT delete the row. Archived tools SHALL NOT appear as cards and SHALL be listed in a collapsed 已下架 list on `/tools`, each with a 復原 action. Restoring SHALL clear `archived_at` and place the tool last in its section. The `tools` table SHALL NOT grant DELETE to any role.
+`admin` and `member` users SHALL be able to archive (下架) a tool; archiving SHALL set `archived_at` and SHALL NOT delete the row. Archived tools SHALL NOT appear as cards and SHALL be listed, while the page is in edit mode, in a collapsed 已下架 list on `/tools`, each with a 復原 action. Restoring SHALL clear `archived_at` and place the tool last in its section. The `tools` table SHALL NOT grant DELETE to any role.
 
 #### Scenario: Archive then restore
 
