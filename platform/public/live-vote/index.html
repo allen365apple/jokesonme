@@ -1,0 +1,293 @@
+<!doctype html>
+<!--
+  最後更新：2026-11-19 04:26
+  誰幫忙的：Claude Code（Claude Opus 5.5）
+  修改摘要：控制台「勝隊獎勵文字」改成「輸贏附帶」：可選勝隊獎勵或輸隊懲罰，預設輸隊要穿囚服拍照
+-->
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b0b0b" />
+    <meta name="robots" content="noindex" />
+    <title>看我笑話現場投票｜雙隊 PK</title>
+    <link rel="stylesheet" href="./style.css?v=13" />
+    <script src="../love-improv/vendor/qrcode.js" defer></script>
+    <script type="module" src="./stage.mjs?v=19"></script>
+  </head>
+  <body class="stage-page">
+    <div class="top-space" aria-hidden="true"></div>
+    <main id="stage" class="stage" tabindex="-1">
+      <header class="stage-header">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">笑</span
+          ><span>看我笑話<span class="brand-sub">現場投票</span></span>
+          <div class="status-block">
+            <span class="status-tag" id="status-tag" hidden>READY</span>
+            <span id="status-text" aria-live="polite">正在準備對戰</span>
+            <span id="status-detail" hidden></span>
+          </div>
+        </div>
+        <div class="header-right">
+          <span id="mode-label" class="mode-label">載入中</span
+          ><span id="connection" class="connection">正在準備</span>
+        </div>
+      </header>
+      <div class="headline">
+        <h1 id="headline-title">今天哪一隊最有趣？<span>投票吧！</span></h1>
+      </div>
+      <section class="arena" aria-label="兩隊即時票數">
+        <div class="arena-team" id="team-0"></div>
+        <div class="arena-team" id="team-1"></div>
+        <div class="versus" aria-hidden="true">VS<span>笑到最後</span></div>
+        <div class="qr-block" id="qr-block">
+          <div id="qr" class="qr"></div>
+          <div>
+            <strong id="qr-title">掃碼投票</strong>
+            <p id="qr-caption" hidden></p>
+          </div>
+        </div>
+        <div class="arena-rule" aria-hidden="true"></div>
+      </section>
+      <div id="burst" class="burst" aria-hidden="true"></div>
+    </main>
+    <audio
+      id="victory-audio"
+      src="./音效素材 001 戰鬥勝利.mp3"
+      preload="auto"
+    ></audio>
+    <nav class="operator-bar" aria-label="現場控制">
+      <button id="toggle-vote" class="primary" disabled>
+        <kbd>Enter</kbd> 開放投票
+      </button>
+      <button id="settings-button"><kbd>C</kbd> 控制台</button>
+      <button id="test-button"><kbd>T</kbd> 測試</button>
+      <button id="fullscreen-button"><kbd>F</kbd> 全螢幕</button>
+      <div class="qr-control">
+        <button id="qr-button" aria-expanded="false" aria-controls="qr-popover">
+          <kbd>Q</kbd> QR
+        </button>
+        <div
+          id="qr-popover"
+          class="qr-popover"
+          role="group"
+          aria-label="QR Code 控制"
+          hidden
+        >
+          <div class="qr-popover-heading">
+            <strong>QR Code</strong
+            ><button
+              id="qr-visibility"
+              type="button"
+              aria-label="隱藏 QR Code"
+              aria-pressed="true"
+              title="隱藏 QR Code"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                <circle cx="12" cy="12" r="3" />
+                <path class="eye-slash" d="m3 3 18 18" hidden />
+              </svg>
+            </button>
+          </div>
+          <label for="qr-size"
+            >大小 <output id="qr-size-value">130%</output></label
+          >
+          <input
+            id="qr-size"
+            type="range"
+            min="70"
+            max="220"
+            step="5"
+            value="130"
+            aria-label="QR Code 大小"
+          />
+          <label for="qr-position"
+            >上下位置 <output id="qr-position-value">0vh</output></label
+          >
+          <input
+            id="qr-position"
+            type="range"
+            min="-30"
+            max="30"
+            step="1"
+            value="6"
+            aria-label="QR Code 上下位置"
+          />
+        </div>
+      </div>
+      <div class="sound-control">
+        <button
+          id="mute-button"
+          aria-expanded="false"
+          aria-controls="sound-popover"
+        >
+          <kbd>M</kbd> 音效
+        </button>
+        <div
+          id="sound-popover"
+          class="qr-popover"
+          role="group"
+          aria-label="音效控制"
+          hidden
+        >
+          <div class="qr-popover-heading"><strong>音效</strong></div>
+          <label for="volume"
+            >音量 <output id="volume-value">30%</output></label
+          >
+          <input id="volume" type="range" min="0" max="100" value="30" />
+          <label class="sound-switch"
+            ><span>播放勝利音效</span
+            ><input id="sound-enabled" type="checkbox" checked
+          /></label>
+          <button id="preview-sound" type="button">試聽勝利音效</button>
+        </div>
+      </div>
+      <span id="demo-controls" hidden
+        ><button data-sim="0"><kbd>1</kbd> 左隊 +1</button
+        ><button data-sim="1"><kbd>2</kbd> 右隊 +1</button></span
+      >
+    </nav>
+    <p class="operator-note" id="operator-note">票數以最後確認的資料為準。</p>
+    <div class="bottom-space" aria-hidden="true"></div>
+    <div id="toast" class="toast" role="status" hidden></div>
+    <dialog id="settings-dialog" class="settings-dialog">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">BACKSTAGE</p>
+          <h2>現場控制台</h2>
+        </div>
+        <button id="close-settings" aria-label="關閉控制台">✕</button>
+      </div>
+      <p id="settings-mode" class="notice"></p>
+      <p>
+        <a id="audience-link" href="./vote.html" target="_blank" rel="noopener"
+          >開啟投票頁 ↗</a
+        >
+      </p>
+      <p class="notice">
+        公開控制：任何取得此網址的人都能操作投票及修改隊伍，請勿將網址分享給觀眾。
+      </p>
+      <form id="session-form">
+        <h3>本場設定 <small id="edit-hint"></small></h3>
+        <fieldset id="session-fields">
+          <div class="form-row">
+            <label>場次名稱<input name="title" maxlength="60" required /></label
+            ><label
+              >預估觀眾<input
+                name="expected"
+                type="number"
+                min="1"
+                max="10000"
+                value="150"
+                required
+            /></label>
+          </div>
+          <div id="team-editors" class="team-editors"></div>
+        </fieldset>
+        <button id="save-settings" type="submit">儲存本場設定</button>
+      </form>
+      <section>
+        <h3>投影與效果 <small>只影響這台裝置，自動記住</small></h3>
+        <div class="preferences">
+          <label
+            >輸贏附帶<select id="stake-type">
+              <option value="penalty">輸隊懲罰</option>
+              <option value="reward">勝隊獎勵</option>
+            </select></label
+          >
+          <label
+            ><span id="stake-label">輸隊懲罰文字</span
+            ><input
+              id="stake-text"
+              type="text"
+              maxlength="120"
+              value="要穿囚服拍照！"
+              placeholder="要……（前面自動接輸隊名稱；留空只顯示勝隊）"
+          /></label>
+          <label
+            >文字大小<input
+              id="font-scale"
+              type="range"
+              min="85"
+              max="125"
+              value="100"
+            /><output id="font-value">100%</output></label
+          >
+          <label
+            >畫面上下位置（↑／↓，Home 歸位）<input
+              id="top-space"
+              type="range"
+              min="-80"
+              max="80"
+              value="0"
+            /><output id="space-value">0vh</output></label
+          >
+          <label class="check"
+            ><input id="effects-enabled" type="checkbox" checked />
+            彩帶與反超效果</label
+          >
+          <label class="check"
+            ><input id="motion-reduced" type="checkbox" /> 減少動態效果</label
+          >
+        </div>
+      </section>
+      <section id="rehearsal-section" hidden>
+        <h3>排練加票 <small>僅在投票開放時可用</small></h3>
+        <div class="button-row">
+          <button data-batch="0">左隊 +10</button
+          ><button data-batch="1">右隊 +10</button>
+        </div>
+      </section>
+      <section>
+        <h3>投票紀錄</h3>
+        <p class="hint">
+          網址與 QR 固定不變；截止後按 Enter 清票並開放下一輪，歷史紀錄保留。
+        </p>
+        <div class="button-row">
+          <button id="new-session">建立新場次</button>
+        </div>
+        <div id="history-list" class="history-list"></div>
+      </section>
+      <p id="settings-message" class="form-message" role="status"></p>
+    </dialog>
+    <dialog id="test-dialog" class="settings-dialog">
+      <form id="test-form">
+        <div class="dialog-heading">
+          <h2>測試票數</h2>
+          <button type="button" id="close-test" aria-label="關閉測試設定">
+            ✕
+          </button>
+        </div>
+        <p class="notice">只測試這台螢幕的動畫，不會送出或更動正式選票。</p>
+        <div class="form-row">
+          <label
+            ><span id="test-name-0">攻隊</span
+            ><input
+              name="left"
+              type="number"
+              min="0"
+              max="10000"
+              step="1"
+              value="85"
+              required
+          /></label>
+          <label
+            ><span id="test-name-1">受隊</span
+            ><input
+              name="right"
+              type="number"
+              min="0"
+              max="10000"
+              step="1"
+              value="65"
+              required
+          /></label>
+        </div>
+        <button type="submit" class="primary">測試揭曉動畫</button>
+      </form>
+    </dialog>
+    <button id="exit-test" hidden>測試模式・返回正式畫面（Esc）</button>
+    <noscript>請啟用 JavaScript，才能顯示票數與投票控制。</noscript>
+  </body>
+</html>

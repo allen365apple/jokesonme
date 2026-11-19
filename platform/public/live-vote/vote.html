@@ -1,0 +1,59 @@
+<!doctype html>
+<!--
+  最後更新：2026-11-19 04:26
+  誰幫忙的：Claude Code（Claude Opus 5.5）
+  修改摘要：vote.mjs 快取版本號加一，讓手機拿到新版
+-->
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b0b0b" />
+    <meta name="robots" content="noindex" />
+    <title>投下你的笑聲｜看我笑話</title>
+    <link rel="stylesheet" href="./style.css?v=12" />
+    <script type="module" src="./vote.mjs?v=13"></script>
+  </head>
+  <body class="vote-page">
+    <main class="voter">
+      <header class="voter-header">
+        <a class="brand" href="./index.html"
+          ><span class="brand-mark" aria-hidden="true">笑</span
+          ><span>看我笑話現場投票</span></a
+        ><span id="mode-label" class="mode-label">現場投票</span>
+      </header>
+      <div class="voter-heading" hidden>
+        <p class="eyebrow">看我笑話現場投票</p>
+        <h1>今天哪一隊<br />最有趣？<span>投票吧！</span></h1>
+        <p>哪一隊讓你笑到不行？<br />把這一票，留給他們。</p>
+      </div>
+      <div class="voter-status">
+        <span class="status-tag" id="status-tag">READY</span
+        ><span id="vote-status" role="status">正在讀取場次⋯</span>
+      </div>
+      <div
+        id="vote-teams"
+        class="vote-teams"
+        role="group"
+        aria-label="選擇你支持的隊伍"
+      ></div>
+      <section id="receipt" class="receipt" hidden aria-live="polite"></section>
+      <div id="vote-error" class="inline-error" role="alert" hidden></div>
+      <button id="retry-button" class="retry-button" hidden>
+        重新確認連線與投票紀錄
+      </button>
+      <p id="connection" class="connection">正在連線</p>
+      <footer class="voter-footer" hidden>
+        <strong>笑聲不分高下，今天偏要。</strong>
+        <p>
+          每個瀏覽器每輪一票，截止前可改投。<br />不收集你的姓名、電話或電子郵件。
+        </p>
+      </footer>
+    </main>
+    <div class="vote-dock">
+      <span id="selection-label">先選一隊，把笑聲變成一票。</span
+      ><button id="submit-vote" disabled>確認投票 <span>↗</span></button>
+    </div>
+    <noscript>請啟用 JavaScript，才能參加投票。</noscript>
+  </body>
+</html>
