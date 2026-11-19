@@ -1,7 +1,7 @@
 "use client";
-// 最後更新：2026-11-19 15:32
+// 最後更新：2026-11-19 15:48
 // 誰幫忙的：Claude Code（Claude Opus 5.5）
-// 修改摘要：新增工具箱頁的互動層（三區卡片、新增／編輯表單、上下移、下架與復原）；卡片放進 .tool-grid（900px 以上兩欄）、編輯按鈕加上工具名稱；編輯／上移／下移／下架改成小 icon 按鈕，滑鼠移上去顯示說明
+// 修改摘要：新增工具箱頁的互動層（三區卡片、新增／編輯表單、上下移、下架與復原）；卡片放進 .tool-grid（900px 以上兩欄）、編輯按鈕加上工具名稱；編輯／上移／下移改成小 icon、下架改成卡片右上角的小叉叉，滑鼠移上去立刻顯示說明
 //
 // 工具箱的互動層（spec tools-directory）。卡片本身是外連（新分頁開工具原本的網址），
 // 管理按鈕放在卡片連結下方；送出後伺服器會再檢查權限與欄位，失敗原因用中文顯示。
@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { archiveTool, createTool, moveTool, restoreTool, updateTool, type ToolResult } from "@/app/(app)/tools/actions";
 import type { Tool, ToolSection } from "@/lib/tools";
-import { IconArchive, IconArrowDown, IconArrowUp, IconEdit, IconPlus } from "@/components/icons";
+import { IconArrowDown, IconArrowUp, IconClose, IconEdit, IconPlus } from "@/components/icons";
 
 const SECTIONS: { key: ToolSection; label: string }[] = [
   { key: "internal", label: "團隊內部工具" },
@@ -64,7 +64,7 @@ export default function ToolsBoard({ tools }: { tools: Tool[] }) {
             </div>
             <div className="tool-grid">
               {list.map((t, i) => (
-                <div key={t.id} className="card">
+                <div key={t.id} className="card tool-card">
                   <a className="row" href={t.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "none" }}>
                     <span aria-hidden="true" style={ICON_STYLE}>{t.icon}</span>
                     <span className="row-main">
@@ -72,12 +72,12 @@ export default function ToolsBoard({ tools }: { tools: Tool[] }) {
                       {t.description ? <span className="meta">{t.description}</span> : null}
                     </span>
                   </a>
-                  <div className="actions">
-                    <button className="icon-btn" type="button" disabled={pending} aria-label={`編輯「${t.name}」`} title="編輯" onClick={() => { setError(null); setForm({ tool: t }); }}><IconEdit /></button>
-                    <button className="icon-btn" type="button" disabled={pending || i === 0} aria-label={`把「${t.name}」往上移`} title="往上移一格" onClick={() => act(moveTool, { id: t.id, dir: "up" })}><IconArrowUp /></button>
-                    <button className="icon-btn" type="button" disabled={pending || i === list.length - 1} aria-label={`把「${t.name}」往下移`} title="往下移一格" onClick={() => act(moveTool, { id: t.id, dir: "down" })}><IconArrowDown /></button>
-                    <button className="icon-btn" type="button" disabled={pending} aria-label={`下架「${t.name}」`} title="下架（之後可以在「已下架」復原）" onClick={() => act(archiveTool, { id: t.id })}><IconArchive /></button>
+                  <div className="actions tool-actions">
+                    <button className="tool-btn" type="button" disabled={pending} aria-label={`編輯「${t.name}」`} data-tip="編輯" onClick={() => { setError(null); setForm({ tool: t }); }}><IconEdit /></button>
+                    <button className="tool-btn" type="button" disabled={pending || i === 0} aria-label={`把「${t.name}」往上移`} data-tip="往上移一格" onClick={() => act(moveTool, { id: t.id, dir: "up" })}><IconArrowUp /></button>
+                    <button className="tool-btn" type="button" disabled={pending || i === list.length - 1} aria-label={`把「${t.name}」往下移`} data-tip="往下移一格" onClick={() => act(moveTool, { id: t.id, dir: "down" })}><IconArrowDown /></button>
                   </div>
+                  <button className="tool-btn tool-close" type="button" disabled={pending} aria-label={`下架「${t.name}」`} data-tip="下架（可在「已下架」復原）" onClick={() => act(archiveTool, { id: t.id })}><IconClose /></button>
                 </div>
               ))}
             </div>

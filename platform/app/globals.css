@@ -1,6 +1,6 @@
-/* 最後更新：2026-11-19 15:32
+/* 最後更新：2026-11-19 15:48
    誰幫忙的：Claude Code（Claude Opus 5.5）
-   修改摘要：新增工具箱卡片格線 .tool-grid（手機一欄、900px 以上兩欄）與 icon 按鈕間距、停用時變淡，不加顏色 */
+   修改摘要：新增工具箱卡片格線 .tool-grid（手機一欄、900px 以上兩欄）、小圓圈 icon 按鈕 .tool-btn、右上角下架叉叉與立即顯示的說明，只用既有顏色變數
 /* 視覺：Soft UI，2026-11-12 改版（openspec change soft-ui-orange）。
    象牙白底；卡片微微浮起、沒有外框；按鈕是膠囊形；輸入類元件往內凹。
    強調色只有橘色：「下一場」大卡、主要按鈕與＋、目前分頁、選取狀態、急件日期、勾選框、進度條、圖表主要系列。 */
@@ -724,6 +724,16 @@ textarea.input { resize: vertical; }
 /* 工具箱（change tools-directory）：手機一行一張卡，900px 以上兩欄。只排版，不加顏色。 */
 .tool-grid { display: grid; grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 900px) { .tool-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; } }
-.tool-grid .icon-btn { width: 36px; height: 36px; }
-.tool-grid .icon-btn svg { width: 18px; height: 18px; }
-.tool-grid .icon-btn:disabled { opacity: .35; cursor: default; }
+.tool-card { position: relative; }
+.tool-card > a { padding-right: 26px; }
+.tool-actions { gap: 6px; margin-top: 6px; }
+.tool-btn { position: relative; width: 28px; height: 28px; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: transparent; box-shadow: none; color: var(--ink-3); display: inline-grid; place-items: center; cursor: pointer; flex: none; }
+.tool-btn svg { width: 14px; height: 14px; }
+.tool-btn:hover:not(:disabled), .tool-btn:focus-visible { color: var(--ink); border-color: var(--border-hover); }
+.tool-btn:disabled { opacity: .35; cursor: default; }
+.tool-close { position: absolute; top: 10px; right: 0; width: 22px; height: 22px; border-color: transparent; }
+.tool-close svg { width: 12px; height: 12px; }
+/* 滑鼠移上去立刻顯示說明（不用瀏覽器內建 title 的延遲） */
+.tool-btn[data-tip]::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); padding: 4px 8px; border-radius: 8px; background: var(--ink); color: var(--surface); font-size: var(--fs-secondary); line-height: 1.4; white-space: nowrap; pointer-events: none; opacity: 0; visibility: hidden; z-index: 5; }
+.tool-btn[data-tip]:hover:not(:disabled)::after, .tool-btn[data-tip]:focus-visible::after { opacity: 1; visibility: visible; }
+.tool-close[data-tip]::after { left: auto; right: 0; transform: none; }
