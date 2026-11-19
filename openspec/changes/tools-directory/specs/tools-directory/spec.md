@@ -2,17 +2,22 @@
 
 ### Requirement: Toolbox page lists tools by section
 
-The system SHALL provide a page at `/tools` that lists every tool whose `archived_at` is empty as a card showing its icon, name, and one-line description. Cards SHALL be grouped into three sections shown in this fixed order: 團隊內部工具 (`internal`), 現場演出工具 (`live`), 其他 (`other`). Within a section, cards SHALL be ordered by `position` ascending. A section with no listed tools SHALL NOT be shown. At widths below 900px the page SHALL show one card per row.
+The system SHALL provide a page at `/tools` that lists every tool whose `archived_at` is empty as a card showing its icon, name, and one-line description. Cards SHALL be grouped into the sections stored in `tool_sections` whose `archived_at` is empty, shown in ascending section `position`; within a section, cards SHALL be ordered by tool `position` ascending. Outside edit mode a section with no listed tools SHALL NOT be shown, cards SHALL be one per row below 900px and two per row from 900px. In edit mode every active section SHALL be shown, including empty ones, and cards SHALL be one per row at every width.
 
-#### Scenario: Sections in fixed order
+#### Scenario: Default section order
 
-- **WHEN** a member opens `/tools` and tools exist in all three sections
-- **THEN** the page shows 團隊內部工具, then 現場演出工具, then 其他, each with its cards ordered by `position`
+- **WHEN** a member opens `/tools` on a freshly migrated database
+- **THEN** the page shows 現場演出工具, then 團隊內部工具, then 其他, each with its cards ordered by `position`
 
 #### Scenario: Phone width shows one card per row
 
 - **WHEN** a member opens `/tools` at 390px width
 - **THEN** every card spans the full content width and no card sits beside another
+
+#### Scenario: Empty section only visible while editing
+
+- **WHEN** a member adds a section named 測試區 and then presses 完成
+- **THEN** 測試區 is shown while editing and is hidden after 完成 because it has no listed tools
 
 ### Requirement: Tool cards open the existing tool address
 
@@ -23,9 +28,18 @@ Each tool card SHALL be a link to the tool's stored `url` that opens in a new br
 - **WHEN** a member clicks the 看我摸牌 card
 - **THEN** a new tab opens `https://allen365apple.github.io/jokes-on-me/mahjong-draw.html` and the `/tools` tab stays open
 
+### Requirement: Edit mode for the toolbox
+
+`/tools` SHALL show a 編輯 toggle next to 新增工具. While the toggle is off, the page SHALL show only section headings and cards, with no controls and no 已下架 list. Turning it on (the button then reads 完成) SHALL reveal: on each tool, a drag handle, an edit control, and an archive control; on each section, a drag handle, a rename control, and a delete control; a 新增區塊 button; and the 已下架 list. Edit mode SHALL stay on after any of these actions until 完成 is pressed. Each control SHALL show its purpose immediately on pointer hover or keyboard focus.
+
+#### Scenario: Clean view by default
+
+- **WHEN** a member opens `/tools`
+- **THEN** no drag handle, edit, archive, rename, or delete control is visible until 編輯 is pressed
+
 ### Requirement: Members add and edit tools
 
-`/tools` SHALL show a 編輯 toggle next to 新增工具. While the toggle is off, cards SHALL show only icon, name, and description, with no per-card controls and no 已下架 list; turning it on (the button then reads 完成) SHALL reveal each card's edit, move up, move down, and archive controls and the 已下架 list, and SHALL stay on after any of those actions until 完成 is pressed. `admin` and `member` users SHALL be able to add a tool from `/tools` by entering icon, name, description, URL, and section, and SHALL be able to edit every one of those fields on an existing tool. A newly added tool, and a tool whose section is changed, SHALL be placed last in its section. After a successful save the card SHALL appear without a manual reload and SHALL still be present after reloading.
+`admin` and `member` users SHALL be able to add a tool from `/tools` by entering icon, name, description, URL, and section, and SHALL be able to edit every one of those fields on an existing tool. The section choice SHALL list the active sections in their current order. A newly added tool, and a tool whose section is changed, SHALL be placed last in its section. After a successful save the card SHALL appear without a manual reload and SHALL still be present after reloading.
 
 #### Scenario: Add a tool
 
@@ -63,7 +77,7 @@ The tool form SHALL show a 選圖示 button beside the icon field. Pressing it S
 
 ### Requirement: Tool input validation
 
-The system SHALL reject a tool save and show a plain-Chinese message, writing nothing, when any of these hold after trimming whitespace: icon is empty or longer than 8 characters; name is empty or longer than 40 characters; description is longer than 120 characters; section is not `internal`, `live`, or `other`; URL cannot be parsed or its scheme is not `http` or `https`. The database SHALL also refuse any `url` not starting with `http://` or `https://`.
+The system SHALL reject a tool save and show a plain-Chinese message, writing nothing, when any of these hold after trimming whitespace: icon is empty or longer than 8 characters; name is empty or longer than 40 characters; description is longer than 120 characters; the section is not an existing section whose `archived_at` is empty (checked on the server); URL cannot be parsed or its scheme is not `http` or `https`. The database SHALL also refuse any `url` not starting with `http://` or `https://`.
 
 ##### Example: URL acceptance
 
@@ -80,59 +94,92 @@ The system SHALL reject a tool save and show a plain-Chinese message, writing no
 - **WHEN** a member saves a tool with URL `javascript:alert(1)`
 - **THEN** the form shows 網址要用 http:// 或 https:// 開頭 and no tool is created or changed
 
-### Requirement: Reorder tools within a section
+#### Scenario: Deleted section is refused
 
-`admin` and `member` users SHALL be able to move a listed tool one step up or down within its section. The move SHALL swap the tool's `position` with the adjacent listed tool in the same section in a single database transaction. Moving the first tool up or the last tool down SHALL leave the order unchanged. Archived tools SHALL NOT take part in the ordering.
+- **WHEN** a member submits a tool whose section was deleted by someone else after the form opened
+- **THEN** the form shows 這個區塊已經不在了，請重新整理後再選 and no tool is created or changed
 
-##### Example: Move down
+### Requirement: Manage toolbox sections
+
+In edit mode `admin` and `member` users SHALL be able to add a section (name 1–20 characters after trimming, placed last), rename a section (same name rule), and delete a section. Deleting SHALL set the section's `archived_at` and SHALL NOT delete the row. The system SHALL refuse, with a plain-Chinese message and no change, to delete a section that still holds listed tools or the last remaining active section; archived tools in a section do not block its deletion. The `tool_sections` table SHALL NOT grant DELETE to any role.
+
+##### Example: Delete rules
+
+| Section state | Delete result |
+| ------------- | ------------- |
+| no tools at all | deleted |
+| only archived tools | deleted |
+| one or more listed tools | refused: 區塊裡還有工具，先把工具移走或下架再刪除 |
+| the only active section | refused: 至少要留一個區塊 |
+
+#### Scenario: Rename a section
+
+- **WHEN** a member renames 其他 to 公開資訊
+- **THEN** the heading reads 公開資訊, the section choice in the tool form lists 公開資訊, and the change survives a reload
+
+### Requirement: Drag to reorder sections and tools
+
+In edit mode `admin` and `member` users SHALL be able to reorder sections, and reorder tools within one section, by dragging the item's drag handle with mouse, pen, or touch. Dragging SHALL start only from the handle; while dragging, the item SHALL follow the pointer and a drop marker SHALL show the destination without shifting other items; releasing SHALL move the item there, and `Escape` SHALL cancel the drag. A tool SHALL NOT be dropped into another section by dragging. The page SHALL show the new order immediately and save it by sending the full ordered list of ids for that section (or of all active sections) to a database function that applies every position in one transaction. If the ids sent do not exactly match the current listed ids, the function SHALL refuse; the page SHALL then restore the previous order and show 清單已經被別人改過，請重新整理後再排. Any other save failure SHALL also restore the previous order with a plain-Chinese message. With keyboard focus on a drag handle, `ArrowUp` and `ArrowDown` SHALL move the item one place and the new position SHALL be announced politely to assistive technology.
+
+##### Example: Drop a tool
 
 - **GIVEN** 現場演出工具 lists 看我戀愛, 看我笑話現場投票, 看我摸牌 in that order
-- **WHEN** a member moves 看我戀愛 down
-- **THEN** the order becomes 看我笑話現場投票, 看我戀愛, 看我摸牌
+- **WHEN** a member drags 看我摸牌 by its handle and releases it above 看我戀愛
+- **THEN** the order becomes 看我摸牌, 看我戀愛, 看我笑話現場投票 and is the same after a reload
 
-#### Scenario: First tool cannot move up
+#### Scenario: Reorder sections with the keyboard
 
-- **WHEN** a member moves the first tool of a section up
-- **THEN** the section order is unchanged and no error is shown
+- **WHEN** a member focuses the drag handle of 團隊內部工具 and presses `ArrowUp`
+- **THEN** 團隊內部工具 becomes the first section, the change is announced, and it survives a reload
+
+#### Scenario: Stale order is refused
+
+- **WHEN** a member drops a tool after another member archived a tool in the same section
+- **THEN** the page restores the previous order, shows 清單已經被別人改過，請重新整理後再排, and no position changes in the database
 
 ### Requirement: Archive and restore tools
 
-`admin` and `member` users SHALL be able to archive (下架) a tool; archiving SHALL set `archived_at` and SHALL NOT delete the row. Archived tools SHALL NOT appear as cards and SHALL be listed, while the page is in edit mode, in a collapsed 已下架 list on `/tools`, each with a 復原 action. Restoring SHALL clear `archived_at` and place the tool last in its section. The `tools` table SHALL NOT grant DELETE to any role.
+`admin` and `member` users SHALL be able to archive (下架) a tool; archiving SHALL set `archived_at` and SHALL NOT delete the row. Archived tools SHALL NOT appear as cards and SHALL be listed, while the page is in edit mode, in a collapsed 已下架 list on `/tools`, each with a 復原 action. Restoring SHALL clear `archived_at` and place the tool last in its section; if that section has been deleted, the tool SHALL be placed last in the first active section. The `tools` table SHALL NOT grant DELETE to any role.
 
 #### Scenario: Archive then restore
 
 - **WHEN** a member archives 現場抽籤機 and then restores it from 已下架
 - **THEN** 現場抽籤機 disappears from 現場演出工具 after archiving, appears in 已下架, and after restoring appears as the last card of 現場演出工具 with its original name, description, and URL
 
+#### Scenario: Restore into a deleted section
+
+- **WHEN** a member restores an archived tool whose section was deleted
+- **THEN** the tool appears as the last card of the first section on the page
+
 ### Requirement: Tool records are server-side and audited
 
-Tool records SHALL be stored in the platform database table `tools` with row level security enabled and no policies, with all privileges revoked from `public`, `anon`, and `authenticated`, and with `service_role` granted only select, insert, and update. Every write SHALL go through the server with the acting user recorded by the audit trigger. The reorder function SHALL be executable only by `service_role`.
+Tool and section records SHALL be stored in the platform database tables `tools` and `tool_sections` with row level security enabled and no policies, with all privileges revoked from `public`, `anon`, and `authenticated`, and with `service_role` granted only select, insert, and update. Every write SHALL go through the server with the acting user recorded by the audit trigger. The reorder functions SHALL be executable only by `service_role`.
 
 #### Scenario: Anonymous client cannot read tools
 
-- **WHEN** a client using the anon key selects from `tools`
+- **WHEN** a client using the anon key selects from `tools` or `tool_sections`
 - **THEN** the database refuses the request with a permission error
 
 ### Requirement: Initial tool catalog
 
-The migration that creates `tools` SHALL insert these ten tools so that the page is populated after deployment:
+The migration that creates the tables SHALL insert three sections in this order: 現場演出工具, 團隊內部工具, 其他; and these ten tools so that the page is populated after deployment:
 
 | Section | Icon | Name | URL |
 | ------- | ---- | ---- | --- |
-| internal | 💌 | 走心分享預覽 | `https://allen365apple.github.io/jokes-on-me/member-only-content/latest.html` |
-| internal | 🎨 | 社群素材產生器 | `https://jessechen-humanoid.github.io/jokesonme-post/` |
-| internal | 📋 | 網頁製作須知 | `https://allen365apple.github.io/jokes-on-me/web-guide.html` |
-| live | 💗 | 看我戀愛 | `https://allen365apple.github.io/jokes-on-me/love-improv/index.html` |
-| live | ⚔️ | 看我笑話現場投票 | `https://allen365apple.github.io/jokes-on-me/live-vote/index.html` |
-| live | 🀄 | 看我摸牌 | `https://allen365apple.github.io/jokes-on-me/mahjong-draw.html` |
-| live | 🕺 | 看我動作片 | `https://allen365apple.github.io/jokes-on-me/action-draw.html` |
-| live | 🎫 | 現場抽籤機 | `https://allen365apple.github.io/jokes-on-me/comment-lottery.html` |
-| live | ❓ | 現場問答系統 by 支薪好友 | `https://allen365apple.github.io/jokes-on-me/fwb-quiz/home.html` |
-| other | 📅 | 看笑演出行事曆（公開） | the public Google Calendar embed address used by the GitHub Pages toolbox |
+| 現場演出工具 | 💗 | 看我戀愛 | `https://allen365apple.github.io/jokes-on-me/love-improv/index.html` |
+| 現場演出工具 | ⚔️ | 看我笑話現場投票 | `https://allen365apple.github.io/jokes-on-me/live-vote/index.html` |
+| 現場演出工具 | 🀄 | 看我摸牌 | `https://allen365apple.github.io/jokes-on-me/mahjong-draw.html` |
+| 現場演出工具 | 🕺 | 看我動作片 | `https://allen365apple.github.io/jokes-on-me/action-draw.html` |
+| 現場演出工具 | 🎫 | 現場抽籤機 | `https://allen365apple.github.io/jokes-on-me/comment-lottery.html` |
+| 現場演出工具 | ❓ | 現場問答系統 by 支薪好友 | `https://allen365apple.github.io/jokes-on-me/fwb-quiz/home.html` |
+| 團隊內部工具 | 💌 | 走心分享預覽 | `https://allen365apple.github.io/jokes-on-me/member-only-content/latest.html` |
+| 團隊內部工具 | 🎨 | 社群素材產生器 | `https://jessechen-humanoid.github.io/jokesonme-post/` |
+| 團隊內部工具 | 📋 | 網頁製作須知 | `https://allen365apple.github.io/jokes-on-me/web-guide.html` |
+| 其他 | 📅 | 看笑演出行事曆（公開） | the public Google Calendar embed address used by the GitHub Pages toolbox |
 
 Within each section the tools SHALL be positioned in the table order.
 
 #### Scenario: Fresh database after migration
 
 - **WHEN** the migration runs on an empty database
-- **THEN** `tools` holds ten listed rows: three `internal`, six `live`, one `other`
+- **THEN** `tool_sections` holds three active rows in the order 現場演出工具, 團隊內部工具, 其他, and `tools` holds ten listed rows: six, three, and one in those sections
