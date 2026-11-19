@@ -1,6 +1,6 @@
-// 最後更新：2026-11-19 13:49
+// 最後更新：2026-11-19 15:32
 // 誰幫忙的：Claude Code（Claude Opus 5.5）
-// 修改摘要：新增工具箱圖示 IconToolbox（同線條風格）。
+// 修改摘要：新增工具箱圖示 IconToolbox，以及工具箱按鈕用的 IconArrowUp、IconArrowDown、IconArchive（同線條風格）。
 // 線條圖示（導覽、按鈕用）。stroke 跟著文字顏色走，大小由 CSS 決定。
 type P = { className?: string };
 const svg = (path: React.ReactNode) =>
@@ -24,4 +24,7 @@ export const IconChevronLeft = svg(<path d="M15 5l-7 7 7 7" />);
 export const IconHome = svg(<><path d="M4 11l8-7 8 7" /><path d="M6 10v10h12V10" /><path d="M10 20v-6h4v6" /></>);
 export const IconTicket = svg(<><path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h13A1.5 1.5 0 0 1 20 7.5V10a2 2 0 0 0 0 4v2.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 16.5V14a2 2 0 0 0 0-4z" /><path d="M14 6v12" strokeDasharray="2 2.5" /></>);
 export const IconToolbox = svg(<><rect x="3.5" y="8" width="17" height="11.5" rx="2.5" /><path d="M9 8V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v2" /><path d="M3.5 13h17M10.5 13v2h3v-2" /></>);
+export const IconArrowUp = svg(<path d="M12 19V5M6 11l6-6 6 6" />);
+export const IconArrowDown = svg(<path d="M12 5v14M6 13l6 6 6-6" />);
+export const IconArchive = svg(<><rect x="3.5" y="4.5" width="17" height="4.5" rx="1.5" /><path d="M5 9v9.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V9" /><path d="M10 13h4" /></>);
 export const IconInbox = svg(<><path d="M4 13l2.5-8h11L20 13v6H4z" /><path d="M4 13h5l1.5 2.5h3L15 13h5" /></>);
