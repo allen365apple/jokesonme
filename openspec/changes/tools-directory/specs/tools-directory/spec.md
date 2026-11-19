@@ -37,6 +37,30 @@ Each tool card SHALL be a link to the tool's stored `url` that opens in a new br
 - **WHEN** a member edits 網頁製作須知 and changes its section from 團隊內部工具 to 其他
 - **THEN** 網頁製作須知 no longer appears in 團隊內部工具 and appears as the last card in 其他
 
+### Requirement: Icon picker with search
+
+The tool form SHALL show a 選圖示 button beside the icon field. Pressing it SHALL expand, inside the form, a list of common emoji grouped under Chinese headings with a search box; the search SHALL match Chinese names and keywords, Latin keywords case-insensitively, or a pasted emoji, and SHALL say plainly when nothing matches. Choosing an emoji SHALL put it into the icon field, collapse the list, and return focus to the 選圖示 button. The icon field SHALL still accept any emoji typed or pasted directly, subject to Tool input validation.
+
+##### Example: Search terms
+
+| Search text | Shown emoji include |
+| ----------- | ------------------- |
+| 麥克風 | 🎤, 🎙️ |
+| 投票 | 🗳️ |
+| ai | 🤖 |
+| 🦦 | 🦦 |
+| 完全不存在的關鍵字 | none, with a hint to type the emoji directly |
+
+#### Scenario: Search and pick an emoji
+
+- **WHEN** a member opens 選圖示, types 麥克風, and picks 🎙️
+- **THEN** the icon field shows 🎙️, the list collapses, and focus returns to the 選圖示 button
+
+#### Scenario: Type an emoji that is not in the list
+
+- **WHEN** a member types 🪩 directly into the icon field and saves the tool
+- **THEN** the tool is saved with icon 🪩
+
 ### Requirement: Tool input validation
 
 The system SHALL reject a tool save and show a plain-Chinese message, writing nothing, when any of these hold after trimming whitespace: icon is empty or longer than 8 characters; name is empty or longer than 40 characters; description is longer than 120 characters; section is not `internal`, `live`, or `other`; URL cannot be parsed or its scheme is not `http` or `https`. The database SHALL also refuse any `url` not starting with `http://` or `https://`.

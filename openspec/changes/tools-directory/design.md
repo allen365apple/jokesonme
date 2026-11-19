@@ -40,6 +40,11 @@
 
 `validateToolInput(raw)` 是純函式：修剪空白、檢查欄位長度、分區只能三選一、網址必須能被 `new URL()` 解析且 protocol 是 `http:` 或 `https:`；回傳 `{ ok: true, value }` 或 `{ ok: false, error: "<白話中文>" }`。server action 與資料庫 check 雙重把關。
 
+### Inline emoji picker without new dependency
+
+表單的圖示欄旁加「選圖示」按鈕，按下在表單內展開（按鈕帶 `aria-expanded`／`aria-controls`），不另開彈出層，因為表單本身已是彈出的 sheet。emoji 清單是 `platform/lib/emoji-list.ts` 手寫的常用清單（約 270 個，分組、附中文關鍵字），搜尋是同檔的純函式 `searchEmoji`。
+替代方案：引入開源套件 `emojibase-data`（約 1,900 個、官方繁中關鍵字）——要新增相依套件，這次先不加，等柏文與 Jesse 決定；清單沒有的 emoji 可以直接在欄位輸入。
+
 ### Desktop-only toolbox nav item
 
 `ITEMS` 在「開發」後新增 `{ href: "/tools", label: "工具箱", Icon: IconToolbox, areas: ["admin","member"], deskOnly: true }`。`IconToolbox` 照既有 icon 的線條風格（同 stroke 寬度、`currentColor`）新增。

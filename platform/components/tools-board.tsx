@@ -1,7 +1,7 @@
 "use client";
-// 最後更新：2026-11-19 16:02
+// 最後更新：2026-11-19 16:47
 // 誰幫忙的：Claude Code（Claude Opus 5.5）
-// 修改摘要：新增工具箱頁的互動層（三區卡片、新增／編輯表單、上下移、下架與復原）；卡片放進 .tool-grid（900px 以上兩欄）、編輯按鈕加上工具名稱；「新增工具」旁加「編輯」開關，按下才出現小 icon（編輯／上下移）、右上角下架叉叉與已下架清單
+// 修改摘要：新增工具箱頁的互動層（三區卡片、新增／編輯表單、上下移、下架與復原）；卡片放進 .tool-grid（900px 以上兩欄）、編輯按鈕加上工具名稱；「新增工具」旁加「編輯」開關，按下才出現小 icon（編輯／上下移）、右上角下架叉叉與已下架清單；表單圖示欄改用 emoji 選擇器
 //
 // 工具箱的互動層（spec tools-directory）。卡片本身是外連（新分頁開工具原本的網址），
 // 管理按鈕放在卡片連結下方；送出後伺服器會再檢查權限與欄位，失敗原因用中文顯示。
@@ -11,6 +11,7 @@ import { useState, useTransition } from "react";
 import { archiveTool, createTool, moveTool, restoreTool, updateTool, type ToolResult } from "@/app/(app)/tools/actions";
 import type { Tool, ToolSection } from "@/lib/tools";
 import { IconArrowDown, IconArrowUp, IconClose, IconEdit, IconPlus } from "@/components/icons";
+import EmojiPicker from "@/components/emoji-picker";
 
 const SECTIONS: { key: ToolSection; label: string }[] = [
   { key: "internal", label: "團隊內部工具" },
@@ -143,10 +144,7 @@ function ToolForm({ tool, onClose, onDone }: { tool?: Tool; onClose: () => void;
             });
           }}
         >
-          <label className="field">
-            <span>圖示（放一個 emoji）</span>
-            <input className="input" name="icon" defaultValue={tool?.icon ?? ""} autoComplete="off" autoFocus={!tool} />
-          </label>
+          <EmojiPicker name="icon" defaultValue={tool?.icon ?? ""} autoFocus={!tool} />
           <label className="field">
             <span>名稱（最多 40 字）</span>
             <input className="input" name="name" defaultValue={tool?.name ?? ""} autoComplete="off" />

@@ -21,6 +21,8 @@
 - [x] 3.2 新增 `platform/app/(app)/tools/page.tsx`（`requirePage("tools", "/tools")`）與 `platform/components/tools-board.tsx`：「Toolbox page lists tools by section」三區固定順序、空區不顯示、390px 一行一張卡；「Tool cards open the existing tool address」整張卡 `target="_blank" rel="noopener noreferrer"`；新增／編輯表單、上移／下移、下架、收合的「已下架（n）」與復原；只用 `platform/app/globals.css` 既有變數與 class。驗證：4.2 的 1280px 與 390px 截圖與操作紀錄。[after: 3.1]
 - [x] 3.3 照 design「Desktop-only toolbox nav item」在 `platform/components/icons.tsx` 新增同線條風格的 `IconToolbox`，並在 `platform/components/bottom-nav.tsx` 的 `ITEMS`「開發」後加 `/tools`「工具箱」（admin、member、`deskOnly`）；滿足「Icon navigation」。驗證：4.2 確認 1280px 側欄有、390px 底部導覽沒有、390px 直接開 `/tools` 可用。[after: 2.1]
 
+- [x] 3.4 照 design「Inline emoji picker without new dependency」新增 `platform/lib/emoji-list.ts`（常用 emoji、中文關鍵字、`searchEmoji`）與 `platform/components/emoji-picker.tsx`，表單圖示欄改用它；滿足「Icon picker with search」。驗證：`platform/lib/emoji-list.test.ts`（清單不重複、中文與英文關鍵字、貼上 emoji、無結果），以及本機瀏覽器 1280px／390px 展開、搜尋「麥克風」、點選後欄位填入並收起。[after: 3.2]
+
 ## 4. 驗證
 
 - [x] 4.1 在 `platform/` 跑 `npm run test`、`npm run test:db`、`npm run typecheck`、`npm run lint`，輸出各寫進檔案再看，全部通過。[after: 1.3, 3.2, 3.3]
