@@ -1,18 +1,19 @@
-// 最後更新：2026-11-19 13:49
+// 最後更新：2026-11-19 15:09
 // 誰幫忙的：Claude Code（Claude Opus 5.5）
-// 修改摘要：新增工具箱欄位檢查 validateToolInput 的單元測試。
+// 修改摘要：區塊改成資料後，改測區塊 id 格式，並新增區塊名稱 validateSectionName 的邊界測試。
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { validateToolInput } from "./tools.ts";
+import { validateSectionName, validateToolInput } from "./tools.ts";
 
-const base = { icon: "🎲", name: "骰子機", description: "現場擲骰子", url: "https://example.com/dice", section: "live" };
+const SECTION = "6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f";
+const base = { icon: "🎲", name: "骰子機", description: "現場擲骰子", url: "https://example.com/dice", sectionId: SECTION };
 const v = (over: Record<string, string> = {}) => validateToolInput({ ...base, ...over });
 const URL_ERROR = "網址要用 http:// 或 https:// 開頭";
 
 test("合格的輸入通過，並修剪前後空白", () => {
   assert.deepEqual(v({ name: "  骰子機  ", url: " https://example.com/dice " }), {
     ok: true,
-    value: { section: "live", icon: "🎲", name: "骰子機", description: "現場擲骰子", url: "https://example.com/dice" },
+    value: { sectionId: SECTION, icon: "🎲", name: "骰子機", description: "現場擲骰子", url: "https://example.com/dice" },
   });
 });
 
@@ -49,9 +50,26 @@ test("說明 120 字通過、121 字擋下，可以留空", () => {
   assert.equal(v({ description: "" }).ok, true);
 });
 
-test("分區只能是 internal、live、other", () => {
-  for (const section of ["internal", "live", "other"]) assert.equal(v({ section }).ok, true, section);
-  for (const section of ["", "admin", "LIVE"]) assert.deepEqual(v({ section }), { ok: false, error: "請選擇工具要放在哪一區" }, section);
+test("區塊 id 要是 uuid 格式，大小寫不拘、存成小寫", () => {
+  assert.equal(v({ sectionId: SECTION.toUpperCase() }).ok, true);
+  const r = v({ sectionId: ` ${SECTION.toUpperCase()} ` });
+  assert.equal(r.ok && r.value.sectionId, SECTION);
+  for (const sectionId of ["", "live", "internal", "123", `${SECTION}x`, "6f1c2d3e4a5b4c6d8e7f9a0b1c2d3e4f"]) {
+    assert.deepEqual(v({ sectionId }), { ok: false, error: "請選擇工具要放在哪一區" }, sectionId);
+  }
+});
+
+test("區塊名稱：修剪後 1／20 字通過，0／21 字擋下", () => {
+  const err = { ok: false, error: "區塊名稱請填 1 到 20 個字" };
+  assert.deepEqual(validateSectionName("  公開資訊  "), { ok: true, value: "公開資訊" });
+  assert.deepEqual(validateSectionName("字"), { ok: true, value: "字" });
+  assert.equal(validateSectionName("字".repeat(20)).ok, true);
+  assert.equal(validateSectionName("🎤".repeat(20)).ok, true); // emoji 一個算一個字
+  assert.deepEqual(validateSectionName("字".repeat(21)), err);
+  assert.deepEqual(validateSectionName(""), err);
+  assert.deepEqual(validateSectionName("   "), err);
+  assert.deepEqual(validateSectionName(null), err);
+  assert.deepEqual(validateSectionName(undefined), err);
 });
 
 test("缺欄位不會丟錯，回白話錯誤", () => {

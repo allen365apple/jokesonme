@@ -1,6 +1,6 @@
-/* 最後更新：2026-11-19 16:47
+/* 最後更新：2026-11-19 15:12
    誰幫忙的：Claude Code（Claude Opus 5.5）
-   修改摘要：新增工具箱卡片格線 .tool-grid（手機一欄、900px 以上兩欄）、小圓圈 icon 按鈕 .tool-btn、右上角下架叉叉與立即顯示的說明、emoji 選擇器，只用既有顏色變數
+   修改摘要：工具箱改用拖曳排序：新增區塊容器 .tool-sections、拖曳把手 .sort-handle、被拖項目浮起、落點線、拖曳中游標、編輯時工具單欄、螢幕閱讀器專用 .visually-hidden，只用既有顏色變數
 /* 視覺：Soft UI，2026-11-12 改版（openspec change soft-ui-orange）。
    象牙白底；卡片微微浮起、沒有外框；按鈕是膠囊形；輸入類元件往內凹。
    強調色只有橘色：「下一場」大卡、主要按鈕與＋、目前分頁、選取狀態、急件日期、勾選框、進度條、圖表主要系列。 */
@@ -750,3 +750,31 @@ textarea.input { resize: vertical; }
 .emoji-cell { height: 38px; padding: 0; border: 0; border-radius: 10px; background: transparent; font-size: 22px; line-height: 1; cursor: pointer; }
 .emoji-cell:hover, .emoji-cell:focus-visible { background: var(--surface-2); }
 .emoji-empty { margin: 8px 2px; font-size: var(--fs-secondary); color: var(--ink-3); }
+/* 工具箱的區塊與拖曳排序（change tools-directory「Pointer-based drag with keyboard fallback」）。只用既有顏色變數。 */
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* 區塊包在可排序的容器裡，外觀照 .content > section 的卡片 */
+.tool-sections { position: relative; display: flex; flex-direction: column; }
+.tool-sections > section { background: var(--surface); border-radius: 26px; box-shadow: var(--raise); padding: 16px; margin-bottom: 18px; }
+.tool-sections > section .section { margin: 0 0 8px; }
+.tool-section-title { flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.tool-section-title h2 { overflow-wrap: anywhere; }
+.tool-empty { margin: 0 0 6px; font-size: var(--fs-secondary); color: var(--ink-2); }
+.tool-grid { position: relative; }
+/* 編輯時工具改單欄，拖曳只沿垂直方向 */
+@media (min-width: 900px) { .tool-grid.editing { grid-template-columns: minmax(0, 1fr); } }
+/* 把手：只有這裡不讓瀏覽器處理觸控捲動與選字 */
+.sort-handle { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; cursor: grab; }
+html.is-sorting, html.is-sorting * { cursor: grabbing !important; }
+html.is-sorting .tool-btn[data-tip]::after { visibility: hidden; }
+/* 被拖的項目跟著指標浮起；放開後補位動畫期間也保持在上層 */
+[data-sort-id][data-dragging], [data-sort-id][data-settling] { position: relative; z-index: 20; }
+[data-sort-id][data-dragging] { scale: 1.02; box-shadow: var(--raise); pointer-events: none; }
+.tool-card:has(.sort-handle:focus-visible), .tool-sections > section:has(> .section .sort-handle:focus-visible) { outline: 2px solid var(--brand); outline-offset: 2px; }
+/* 落點線：拖曳中畫在前後兩個項目中間，其他項目不移動 */
+.tool-sections[data-drop]::before, .tool-grid[data-drop]::before { content: ""; position: fixed; left: calc(var(--drop-x) - 5px); top: calc(var(--drop-y) - 5px); width: 10px; height: 10px; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--brand); background: var(--surface); pointer-events: none; z-index: 26; }
+.tool-sections[data-drop]::after, .tool-grid[data-drop]::after { content: ""; position: fixed; left: var(--drop-x); top: calc(var(--drop-y) - 1.5px); width: var(--drop-w); height: 3px; border-radius: 2px; background: var(--brand); pointer-events: none; z-index: 25; }
+@media (forced-colors: active) {
+  .tool-sections[data-drop]::after, .tool-grid[data-drop]::after { background: Highlight; }
+  .tool-sections[data-drop]::before, .tool-grid[data-drop]::before { border-color: Highlight; }
+}
+@media (prefers-reduced-motion: reduce) { [data-sort-id][data-dragging] { scale: none; } }
