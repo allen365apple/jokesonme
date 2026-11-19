@@ -1,3 +1,6 @@
+/* 最後更新：2026-11-19 15:05
+   誰幫忙的：Claude Code（Claude Opus 5.5）
+   修改摘要：新增工具箱卡片格線 .tool-grid（手機一欄、900px 以上兩欄），只排版、不加顏色 */
 /* 視覺：Soft UI，2026-11-12 改版（openspec change soft-ui-orange）。
    象牙白底；卡片微微浮起、沒有外框；按鈕是膠囊形；輸入類元件往內凹。
    強調色只有橘色：「下一場」大卡、主要按鈕與＋、目前分頁、選取狀態、急件日期、勾選框、進度條、圖表主要系列。 */
@@ -717,3 +720,7 @@ textarea.input { resize: vertical; }
 .pnl-group { padding: 12px 0 2px; font-size: var(--fs-secondary); color: var(--ink-2); }
 .pnl-item.total .pnl-main b { font-weight: 700; }
 .table.pnl td.name, .table.pnl th:nth-child(2) { text-align: left; }
+
+/* 工具箱（change tools-directory）：手機一行一張卡，900px 以上兩欄。只排版，不加顏色。 */
+.tool-grid { display: grid; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .tool-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; } }
